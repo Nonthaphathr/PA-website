@@ -431,6 +431,14 @@ ul{list-style:none}
   color:var(--text);margin-bottom:10px;
 }
 .sec-desc{color:var(--text-dim);font-size:1rem;max-width:60ch}
+.sec-desc-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:6px}
+.mini-toggle{display:inline-flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+.mini-toggle input{display:none}
+.mt-track{width:42px;height:23px;border-radius:999px;background:var(--line-2);border:1px solid var(--line);position:relative;transition:.28s;flex-shrink:0}
+.mt-thumb{position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.18);transition:.28s}
+.mini-toggle input:checked + .mt-track{background:linear-gradient(135deg,var(--accent),var(--accent-2));border-color:transparent}
+.mini-toggle input:checked + .mt-track .mt-thumb{left:21px}
+.mt-label{font-size:.86rem;font-weight:700;color:var(--accent);font-family:var(--font-head)}
 
 /* Reveal animation */
 .reveal{opacity:0;transform:translateY(28px);transition:.7s cubic-bezier(.2,.7,.2,1)}
@@ -905,6 +913,18 @@ a.link-card{text-decoration:none}
 .ic-cap-text{font-size:.96rem;line-height:1.8;color:var(--text-2);white-space:pre-line}
 .media-size-half .ic-img,.media-size-third .ic-img,.media-size-twothird .ic-img{aspect-ratio:4/3;max-height:none}
 
+/* Card ลิงก์ระบบ (syscard) */
+.syscard{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surface);box-shadow:0 8px 28px rgba(255,107,24,.10);max-width:100%}
+.syscard-cover{position:relative;height:185px;background-size:cover;background-position:center;background-color:#16110d;display:flex;align-items:center;justify-content:center;padding:1rem}
+.syscard-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.22),rgba(0,0,0,.72))}
+.syscard-cover-title{position:relative;z-index:1;color:#fff;font-family:var(--font-head);font-weight:800;font-size:1.22rem;text-align:center;text-shadow:0 2px 12px rgba(0,0,0,.85);line-height:1.35;word-break:break-word}
+.syscard-body{padding:1.1rem 1.2rem 1.25rem}
+.syscard-cat{display:inline-block;font-size:.72rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border:1px solid var(--line-2);border-radius:999px;padding:3px 12px;margin-bottom:9px;letter-spacing:.02em}
+.syscard-name{font-family:var(--font-head);font-weight:800;font-size:1.06rem;color:var(--text);margin-bottom:6px;line-height:1.35}
+.syscard-desc{font-size:.9rem;color:var(--text-2);line-height:1.7;margin-bottom:14px;white-space:pre-line}
+.syscard-link{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-weight:700;font-size:.9rem;padding:10px 18px;border-radius:11px;text-decoration:none;box-shadow:0 6px 18px var(--accent-glow);transition:.2s}
+.syscard-link:hover{transform:translateY(-2px);box-shadow:0 10px 24px var(--accent-glow)}
+
 /* Bulk image+caption modal */
 .ic-bulk-note{font-size:.8rem;color:var(--text-dim);margin-bottom:10px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:8px;padding:8px 12px;line-height:1.6}
 .ic-bulk-rows{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow:auto;padding-right:4px}
@@ -916,6 +936,18 @@ a.link-card{text-decoration:none}
 .ic-bulk-url{font-size:.78rem!important;color:var(--text-dim)}
 .ic-bulk-fields{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
 .ic-bulk-fields input,.ic-bulk-fields textarea{width:100%;padding:8px 11px;border:1px solid var(--line-2);border-radius:8px;font-family:inherit;font-size:.88rem;background:#fff;color:var(--text);resize:vertical}
+
+/* Bulk syscard modal — แถว Card ลิงก์ระบบ (ช่องมากกว่าแบบภาพ+คำบรรยาย) */
+.sc-bulk-thumb{width:84px;height:64px;border-radius:10px;flex-shrink:0;border:2px dashed var(--line-2);background:var(--accent-soft);display:grid;place-items:center;cursor:pointer;overflow:hidden;font-size:.68rem;font-weight:700;color:var(--accent);text-align:center;line-height:1.2}
+.sc-bulk-thumb:hover{background:#fff3e6;border-color:var(--accent)}
+.sc-bulk-thumb img{width:100%;height:100%;object-fit:cover}
+.sc-bulk-fields{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.sc-bulk-fields .sc-bulk-2col{display:flex;gap:6px}
+.sc-bulk-fields .sc-bulk-2col>*{flex:1;min-width:0}
+.sc-bulk-fields input,.sc-bulk-fields textarea{width:100%;padding:8px 11px;border:1px solid var(--line-2);border-radius:8px;font-family:inherit;font-size:.88rem;background:#fff;color:var(--text);resize:vertical}
+.sc-bulk-fields .sc-bulk-sub{font-size:.78rem!important;color:var(--text-dim)}
+.sc-bulk-sizebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.84rem;color:var(--text-2);margin-bottom:10px}
+.sc-bulk-sizebar select{padding:7px 11px;border:1px solid var(--line-2);border-radius:8px;font-family:inherit;font-size:.86rem;background:#fff;color:var(--text)}
 
 /* Responsive: จอแคบยุบคอลัมน์ลง ไม่ให้การ์ดบีบจนอ่านไม่ออก */
 @media(max-width:900px){
@@ -1299,7 +1331,14 @@ a.link-card{text-decoration:none}
     <div class="reveal">
       <div class="sec-label">Part I</div>
       <h2 class="sec-title">ส่วนที่ 1: ข้อตกลงในการพัฒนางานตามมาตรฐานกำหนดตำแหน่ง</h2>
-      <p class="sec-desc">3 ด้าน 15 ตัวชี้วัด ตามที่ระเบียบ ก.จ. กำหนด</p>
+      <div class="sec-desc-row">
+        <p class="sec-desc" style="margin:0">3 ด้าน 15 ตัวชี้วัด ตามที่ระเบียบ ก.จ. กำหนด</p>
+        <label class="mini-toggle" title="เปิด/ยุบทุกตัวชี้วัดพร้อมกัน">
+          <input type="checkbox" id="expandAllChk" onchange="toggleAllIndicators(this.checked)"/>
+          <span class="mt-track"><span class="mt-thumb"></span></span>
+          <span class="mt-label">เปิดดูผลงานทั้งหมด</span>
+        </label>
+      </div>
     </div>
     <!-- Dimension 1 -->
     <div class="reveal" data-d="1" id="dim1-wrap" style="margin-top:32px">
@@ -1592,6 +1631,8 @@ a.link-card{text-decoration:none}
           <button class="btn-add-media" onclick="openMediaForm('video')">▶ ฝังวิดีโอ</button>
           <button class="btn-add-media" onclick="openMediaForm('linkcard')">🔗 Card ลิงก์</button>
           <button class="btn-add-media" onclick="openImgCaptionBulk()">🖼📝 ภาพ+คำบรรยาย (หลายภาพ)</button>
+          <button class="btn-add-media" onclick="openMediaForm('syscard')">🖥 Card ลิงก์ระบบ</button>
+          <button class="btn-add-media" onclick="openSysCardBulk()">🖥📑 Card ลิงก์ระบบ (หลายระบบ)</button>
           <button class="btn-add-media" onclick="openMediaForm('drivedoc')">📄 เอกสาร Drive</button>
           <button class="btn-add-media" onclick="openMediaForm('file')">📁 อัปโหลดไฟล์</button>
         </div>
@@ -1633,6 +1674,8 @@ a.link-card{text-decoration:none}
           <button class="btn-add-media" onclick="openMediaForm('video','challenge')">▶ ฝังวิดีโอ</button>
           <button class="btn-add-media" onclick="openMediaForm('linkcard','challenge')">🔗 Card ลิงก์</button>
           <button class="btn-add-media" onclick="openImgCaptionBulk('challenge')">🖼📝 ภาพ+คำบรรยาย (หลายภาพ)</button>
+          <button class="btn-add-media" onclick="openMediaForm('syscard','challenge')">🖥 Card ลิงก์ระบบ</button>
+          <button class="btn-add-media" onclick="openSysCardBulk('challenge')">🖥📑 Card ลิงก์ระบบ (หลายระบบ)</button>
           <button class="btn-add-media" onclick="openMediaForm('drivedoc','challenge')">📄 เอกสาร Drive</button>
           <button class="btn-add-media" onclick="openMediaForm('file','challenge')">📁 อัปโหลดไฟล์</button>
         </div>
@@ -1673,6 +1716,8 @@ a.link-card{text-decoration:none}
           <button class="btn-add-media" onclick="openMediaForm('carousel','clips')">🎠 Carousel</button>
           <button class="btn-add-media" onclick="openMediaForm('linkcard','clips')">🔗 Card ลิงก์</button>
           <button class="btn-add-media" onclick="openImgCaptionBulk('clips')">🖼📝 ภาพ+คำบรรยาย (หลายภาพ)</button>
+          <button class="btn-add-media" onclick="openMediaForm('syscard','clips')">🖥 Card ลิงก์ระบบ</button>
+          <button class="btn-add-media" onclick="openSysCardBulk('clips')">🖥📑 Card ลิงก์ระบบ (หลายระบบ)</button>
           <button class="btn-add-media" onclick="openMediaForm('drivedoc','clips')">📄 เอกสาร Drive</button>
           <button class="btn-add-media" onclick="openMediaForm('file','clips')">📁 อัปโหลดไฟล์</button>
         </div>
@@ -1717,6 +1762,8 @@ a.link-card{text-decoration:none}
           <button class="btn-add-media" onclick="openMediaForm('video','history')">▶ ฝังวิดีโอ</button>
           <button class="btn-add-media" onclick="openMediaForm('linkcard','history')">🔗 Card ลิงก์</button>
           <button class="btn-add-media" onclick="openImgCaptionBulk('history')">🖼📝 ภาพ+คำบรรยาย (หลายภาพ)</button>
+          <button class="btn-add-media" onclick="openMediaForm('syscard','history')">🖥 Card ลิงก์ระบบ</button>
+          <button class="btn-add-media" onclick="openSysCardBulk('history')">🖥📑 Card ลิงก์ระบบ (หลายระบบ)</button>
           <button class="btn-add-media" onclick="openMediaForm('drivedoc','history')">📄 เอกสาร Drive</button>
           <button class="btn-add-media" onclick="openMediaForm('file','history')">📁 อัปโหลดไฟล์</button>
         </div>
@@ -1777,6 +1824,39 @@ a.link-card{text-decoration:none}
   </div>
 </div>
 
+<!-- Bulk Syscard (Card ลิงก์ระบบ) Modal -->
+<div class="crop-overlay" id="scBulkModal">
+  <div class="crop-modal" style="max-width:860px">
+    <div class="crop-head">
+      <h3>🖥 เพิ่ม Card ลิงก์ระบบ (หลายระบบ)</h3>
+      <button class="modal-close" id="scBulkClose">✕</button>
+    </div>
+    <div style="padding:4px 4px 0">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn btn-ghost btn-sm" onclick="scBulkAddRow()">＋ เพิ่มแถว</button>
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer">📑 นำเข้าจาก .xlsx
+          <input type="file" id="scXlsxFile" accept=".xlsx,.xls" hidden onchange="scImportXlsx(event)"/>
+        </label>
+        <button class="btn btn-ghost btn-sm" onclick="scDownloadTemplate()">⬇ ดาวน์โหลดเทมเพลต</button>
+      </div>
+      <div class="sc-bulk-sizebar">
+        <span>ขนาดการแสดงผลของทุกการ์ด:</span>
+        <select id="scBulkSize">
+          <option value="full">▮ เต็มความกว้าง (1/แถว)</option>
+          <option value="twothird">◧ สองในสาม</option>
+          <option value="half">▥ ครึ่งหนึ่ง (2/แถว)</option>
+          <option value="third" selected>▤ หนึ่งในสาม (3/แถว)</option>
+        </select>
+      </div>
+      <div class="ic-bulk-note">รูปแบบไฟล์ .xlsx: <b>A=ชื่อระบบ</b>, <b>B=หมวดหมู่</b>, <b>C=คำอธิบาย</b>, <b>D=ลิงก์เข้าใช้งาน</b>, <b>E=ชื่อบนปก</b> (ไม่บังคับ), <b>F=URL ภาพปก</b> (ไม่บังคับ) — เว้น E/F ว่างได้ ระบบจะใช้ชื่อระบบเป็นชื่อปก และใช้ปกมาตรฐาน</div>
+      <div id="scBulkRows" class="ic-bulk-rows"></div>
+    </div>
+    <div class="crop-tools" style="justify-content:flex-end;margin-top:14px">
+      <button class="btn btn-primary btn-sm" id="scBulkSave">💾 สร้าง Card ลิงก์ระบบ</button>
+    </div>
+  </div>
+</div>
+
 <!-- Image Lightbox -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <button class="lightbox-close">✕</button>
@@ -1821,6 +1901,7 @@ const db = firebase.firestore();
 // DRIVE UPLOAD CONFIG — โหลดจาก siteSettings (ตั้งใน Settings > ทั่วไป)
 // ============================================================
 let DRIVE_UPLOAD_ENDPOINT = ""; // อัปเดตจาก siteSettings.gasEndpoint
+const SYS_COVER = "https://nonthaphathr.github.io/uploadimg/cardcover.png"; // ภาพปกเริ่มต้นของ Card ลิงก์ระบบ
 let DRIVE_FOLDER_ID = "";       // อัปเดตจาก siteSettings.driveFolderId
 
 // ============================================================
@@ -2004,6 +2085,7 @@ function collectDriveIds(item){
     case "file":     (item.files||[]).forEach(f=>add(f.url)); break;
     case "linkcard": add(item.imageUrl); break;
     case "imgcaption": add(item.url); add(item.imageUrl); (item.images||[]).forEach(add); break;
+    case "syscard": add(item.coverImage); break;
   }
   return [...new Set(ids)];
 }
@@ -2384,6 +2466,13 @@ function toggleIndicator(id){
   const nowOpen = card.classList.toggle("open");
   if(nowOpen) openIndicators.add(id); else openIndicators.delete(id);
 }
+function toggleAllIndicators(open){
+  document.querySelectorAll("#sec-part1 .indicator-card").forEach(card=>{
+    card.classList.toggle("open", open);
+    const id = card.id.replace("ind-card-","");
+    if(open) openIndicators.add(id); else openIndicators.delete(id);
+  });
+}
 
 // ========= CHALLENGE RENDER =========
 function renderChallenge(){
@@ -2551,6 +2640,20 @@ function renderMediaItems(items, context, blockId){
           ${item.caption?`<div class="ic-cap-text">${esc(item.caption)}</div>`:""}
         </figcaption>`:""}
       </figure>`;
+    } else if(type==="syscard"){
+      const cover = item.coverImage || SYS_COVER;
+      const ctitle = item.coverTitle || item.title || "";
+      bodyHtml = `<div class="syscard">
+        <div class="syscard-cover" style="background-image:url('${esc(cover)}')">
+          ${ctitle?`<div class="syscard-cover-title">${esc(ctitle)}</div>`:""}
+        </div>
+        <div class="syscard-body">
+          ${item.category?`<span class="syscard-cat">${esc(item.category)}</span>`:""}
+          ${item.title?`<div class="syscard-name">${esc(item.title)}</div>`:""}
+          ${item.description?`<div class="syscard-desc">${esc(item.description)}</div>`:""}
+          ${item.link?`<a class="syscard-link" href="${esc(item.link)}" target="_blank" rel="noopener">เข้าใช้งานระบบ ↗</a>`:""}
+        </div>
+      </div>`;
     } else if(type==="drivedoc"){
       const previewUrl = convertDriveToPreview(item.url||"");
       bodyHtml = `<div class="drive-embed"><iframe src="${esc(previewUrl)}" loading="lazy"></iframe></div>
@@ -2673,7 +2776,7 @@ function editMediaItem(context, blockId, idx){
 
 // แปลงชื่อชนิดสื่อเป็นภาษาไทย
 function getMediaTypeLabel(t){
-  return {image:"🖼 ภาพ",carousel:"🎠 Carousel",video:"▶ วิดีโอ",linkcard:"🔗 Card ลิงก์",imgcaption:"🖼📝 ภาพ+คำบรรยาย",drivedoc:"📄 เอกสาร Drive",file:"📁 ไฟล์"}[t]||t;
+  return {image:"🖼 ภาพ",carousel:"🎠 Carousel",video:"▶ วิดีโอ",linkcard:"🔗 Card ลิงก์",syscard:"🖥 Card ลิงก์ระบบ",imgcaption:"🖼📝 ภาพ+คำบรรยาย",drivedoc:"📄 เอกสาร Drive",file:"📁 ไฟล์"}[t]||t;
 }
 
 // แปลงลิงก์วิดีโอ YouTube/Drive → embed URL
@@ -2858,6 +2961,108 @@ function icImportXlsx(evt){
         else return;
         renderIcBulkRows();
         showToast("นำเข้า "+parsed.length+" รายการ ✅","ok");
+      });
+    }catch(err){ SW.err("อ่านไฟล์ไม่สำเร็จ", err.message); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ============================================================
+// BULK SYSCARD (Card ลิงก์ระบบ) — สร้างหลายระบบพร้อมกัน + import .xlsx
+// ============================================================
+let scBulkCtx = null;
+let scBulkData = [];
+function scBlankRow(){ return {title:"",category:"",description:"",link:"",coverTitle:"",coverImage:""}; }
+function scRowHasData(r){ return r && (r.title||r.category||r.description||r.link||r.coverTitle||r.coverImage); }
+function openSysCardBulk(ctx){
+  scBulkCtx = ctx || currentEditContext || "indicator";
+  if(!scBulkData.length) scBulkData = [scBlankRow()];
+  renderScBulkRows();
+  $("scBulkModal").classList.add("open");
+}
+function renderScBulkRows(){
+  const box = $("scBulkRows");
+  if(!box) return;
+  box.innerHTML = scBulkData.map((r,i)=>`
+    <div class="ic-bulk-row">
+      <div class="ic-bulk-idx">${i+1}</div>
+      <div class="sc-bulk-thumb" id="scThumb${i}" onclick="scBulkPick(${i})" title="แนบ/เปลี่ยนภาพปก">
+        ${r.coverImage?`<img src="${esc(driveImageUrl(r.coverImage))}" alt=""/>`:`<span>＋ปก</span>`}
+      </div>
+      <div class="sc-bulk-fields">
+        <input placeholder="ชื่อระบบ *" value="${esc(r.title||"")}" oninput="scBulkSet(${i},'title',this.value)"/>
+        <div class="sc-bulk-2col">
+          <input placeholder="หมวดหมู่ (ไม่บังคับ)" value="${esc(r.category||"")}" oninput="scBulkSet(${i},'category',this.value)"/>
+          <input placeholder="ชื่อบนปก (ไม่บังคับ)" value="${esc(r.coverTitle||"")}" oninput="scBulkSet(${i},'coverTitle',this.value)"/>
+        </div>
+        <textarea rows="2" placeholder="คำอธิบายระบบ" oninput="scBulkSet(${i},'description',this.value)">${esc(r.description||"")}</textarea>
+        <input class="sc-bulk-sub" placeholder="ลิงก์เข้าใช้งาน https://..." value="${esc(r.link||"")}" oninput="scBulkSet(${i},'link',this.value)"/>
+        <input class="sc-bulk-sub" placeholder="URL ภาพปก (หรือกดช่องปกซ้ายเพื่ออัปโหลด)" value="${esc(r.coverImage||"")}" oninput="scBulkSetCover(${i},this.value)"/>
+      </div>
+      <button class="btn btn-xs btn-del-media" onclick="scBulkDel(${i})" title="ลบแถว">🗑</button>
+    </div>`).join("");
+}
+function scBulkSet(i,k,v){ if(scBulkData[i]) scBulkData[i][k]=v; }
+function scBulkSetCover(i,v){
+  if(!scBulkData[i]) return;
+  scBulkData[i].coverImage = v.trim();
+  const th=$("scThumb"+i);
+  if(th) th.innerHTML = v.trim()?`<img src="${esc(driveImageUrl(v.trim()))}" alt=""/>`:`<span>＋ปก</span>`;
+}
+function scBulkPick(i){
+  pickCropTo(u=>{ scBulkSetCover(i,u); const inp=document.querySelectorAll('#scBulkRows .ic-bulk-row')[i]?.querySelectorAll('.sc-bulk-sub')[1]; if(inp) inp.value=u; }, '16/9');
+}
+function scBulkAddRow(){ scBulkData.push(scBlankRow()); renderScBulkRows(); }
+function scBulkDel(i){ scBulkData.splice(i,1); if(!scBulkData.length) scBulkData=[scBlankRow()]; renderScBulkRows(); }
+function scDownloadTemplate(){
+  try{
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["ชื่อระบบ","หมวดหมู่","คำอธิบาย","ลิงก์เข้าใช้งาน","ชื่อบนปก (ไม่บังคับ)","URL ภาพปก (ไม่บังคับ)"],
+      ["ระบบตรวจสอบการเข้าเรียน","กลุ่มบริหารงานวิชาการ","ระบบบันทึกและตรวจสอบเวลาเรียนของนักเรียน","https://...","",""],
+      ["ระบบดูแลช่วยเหลือนักเรียน","งานกิจการนักเรียน","ระบบคัดกรองและติดตามนักเรียนรายบุคคล","https://...","",""]
+    ]);
+    ws["!cols"]=[{wch:26},{wch:22},{wch:40},{wch:28},{wch:18},{wch:28}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "syscards");
+    XLSX.writeFile(wb, "template_syscards.xlsx");
+  }catch(e){ SW.err("สร้างเทมเพลตไม่สำเร็จ", e.message); }
+}
+function scImportXlsx(evt){
+  const file = evt.target.files && evt.target.files[0];
+  evt.target.value = "";
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:"array"});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
+      let parsed = rows.map(r=>({
+        title:String(r[0]||"").trim(),
+        category:String(r[1]||"").trim(),
+        description:String(r[2]||"").trim(),
+        link:String(r[3]||"").trim(),
+        coverTitle:String(r[4]||"").trim(),
+        coverImage:String(r[5]||"").trim()
+      })).filter(scRowHasData);
+      // ตัดแถวหัวตาราง (ถ้ามี)
+      if(parsed.length && /^(ชื่อระบบ|ชื่อ|title|name|ระบบ)$/i.test(parsed[0].title)) parsed = parsed.slice(1);
+      if(!parsed.length) return SW.err("ไม่พบข้อมูลในไฟล์","คอลัมน์ A=ชื่อระบบ, B=หมวดหมู่, C=คำอธิบาย, D=ลิงก์, E=ชื่อบนปก, F=URL ภาพปก");
+      Swal.fire({
+        title:"นำเข้า "+parsed.length+" ระบบ",
+        text:"ต้องการเพิ่มแบบไหน?",
+        icon:"question",
+        showDenyButton:true, showCancelButton:true,
+        confirmButtonText:"แทนที่รายการเดิม",
+        denyButtonText:"เพิ่มต่อท้าย",
+        cancelButtonText:"ยกเลิก",
+        confirmButtonColor:"#ff6b18"
+      }).then(res=>{
+        if(res.isConfirmed) scBulkData = parsed;
+        else if(res.isDenied) scBulkData = [...scBulkData.filter(scRowHasData), ...parsed];
+        else return;
+        renderScBulkRows();
+        showToast("นำเข้า "+parsed.length+" ระบบ ✅","ok");
       });
     }catch(err){ SW.err("อ่านไฟล์ไม่สำเร็จ", err.message); }
   };
@@ -3525,6 +3730,20 @@ function openMediaForm(type, ctx, existing){
         </div>
       </div>
       <button class="btn btn-primary btn-sm" onclick="saveMediaItem('linkcard','${context}')">💾 บันทึก Card ลิงก์</button>`;
+  } else if(type==="syscard"){
+    html = `
+      <div class="field"><label>ชื่อระบบ</label><input id="mf_scTitle" placeholder="เช่น ระบบตรวจสอบการเข้าเรียน"/></div>
+      <div class="field"><label>ชื่อบนปก (optional)</label><input id="mf_scCoverTitle" placeholder="ค่าเริ่มต้น = ชื่อระบบ"/></div>
+      <div class="field"><label>หมวดหมู่ (optional)</label><input id="mf_scCategory" placeholder="เช่น กลุ่มบริหารงานวิชาการ"/></div>
+      <div class="field"><label>คำอธิบาย</label><textarea id="mf_scDesc" rows="3" placeholder="อธิบายฟังก์ชันการทำงานของระบบ..."></textarea></div>
+      <div class="field"><label>ลิงก์เข้าใช้งาน</label><input id="mf_scLink" placeholder="https://..."/></div>
+      <div class="field"><label>ภาพปก (bg) — ค่าเริ่มต้นเป็นปกมาตรฐาน</label>
+        <div class="field-with-btn">
+          <input id="mf_scCover" placeholder="https://... หรือกดอัปโหลด"/>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="pickCropTo(u=>{$('mf_scCover').value=u;},'16/9')">📤 อัปโหลด/ครอป</button>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="saveMediaItem('syscard','${context}')">💾 บันทึก Card ลิงก์ระบบ</button>`;
   } else if(type==="imgcaption"){
     html = `
       <div class="field"><label>ชนิดสื่อในบล็อกนี้</label>
@@ -3636,6 +3855,7 @@ function openMediaForm(type, ctx, existing){
     }
     else if(type==="video"){ setVal("mf_videoUrl",existing.url); }
     else if(type==="linkcard"){ setVal("mf_linkTitle",existing.title); setVal("mf_linkUrl",existing.url); setVal("mf_linkDesc",existing.desc); setVal("mf_linkImg",existing.imageUrl); }
+    else if(type==="syscard"){ setVal("mf_scTitle",existing.title); setVal("mf_scCoverTitle",existing.coverTitle); setVal("mf_scCategory",existing.category); setVal("mf_scDesc",existing.description); setVal("mf_scLink",existing.link); setVal("mf_scCover",existing.coverImage); }
     else if(type==="drivedoc"){ setVal("mf_driveUrl",existing.url); setVal("mf_driveTitle",existing.title); }
     else if(type==="file"){
       fileUploadList = (existing.files||[]).map(f=>({name:f.name,url:f.url}));
@@ -3888,6 +4108,10 @@ async function saveMediaItem(type, context){
       const url = ($("mf_linkUrl")||{}).value.trim();
       if(!url) return SW.err("กรุณากรอก URL");
       item = {type:"linkcard",title:($("mf_linkTitle")||{}).value.trim(),url,desc:($("mf_linkDesc")||{}).value.trim(),imageUrl:($("mf_linkImg")||{}).value.trim()};
+    } else if(type==="syscard"){
+      const title=($("mf_scTitle")||{}).value.trim(), link=($("mf_scLink")||{}).value.trim();
+      if(!title && !link) return SW.err("กรุณากรอกชื่อระบบหรือลิงก์");
+      item = {type:"syscard", title, coverTitle:($("mf_scCoverTitle")||{}).value.trim(), category:($("mf_scCategory")||{}).value.trim(), description:($("mf_scDesc")||{}).value.trim(), link, coverImage:($("mf_scCover")||{}).value.trim()};
     } else if(type==="drivedoc"){
       const url = ($("mf_driveUrl")||{}).value.trim();
       if(!url) return SW.err("กรุณากรอก URL เอกสาร");
@@ -4199,6 +4423,51 @@ $("icBulkSave").onclick = async()=>{
     } else { throw new Error("ไม่ทราบบริบท"); }
     Swal.close(); SW.ok("สร้าง "+items.length+" บล็อกแล้ว");
     icBulkData=[]; $("icBulkModal").classList.remove("open");
+  }catch(e){ Swal.close(); SW.err("บันทึกไม่สำเร็จ", e.message); }
+};
+
+// ---- Bulk syscard (Card ลิงก์ระบบ): บันทึก/ปิด ----
+$("scBulkClose").onclick = ()=>$("scBulkModal").classList.remove("open");
+$("scBulkSave").onclick = async()=>{
+  const rows = scBulkData.filter(scRowHasData);
+  if(!rows.length) return SW.err("ยังไม่มีข้อมูล","กรอกชื่อระบบหรือลิงก์อย่างน้อย 1 แถว");
+  const invalid = rows.filter(r=>!(r.title&&r.title.trim())&&!(r.link&&r.link.trim()));
+  if(invalid.length) return SW.err("ข้อมูลไม่ครบ","ทุกแถวต้องมีชื่อระบบหรือลิงก์อย่างน้อยหนึ่งอย่าง");
+  const size = ($("scBulkSize")||{}).value || "third";
+  const items = rows.map(r=>({
+    type:"syscard",
+    title:(r.title||"").trim(),
+    coverTitle:(r.coverTitle||"").trim(),
+    category:(r.category||"").trim(),
+    description:(r.description||"").trim(),
+    link:(r.link||"").trim(),
+    coverImage:(r.coverImage||"").trim(),
+    size
+  }));
+  const ctx = scBulkCtx;
+  SW.loading("กำลังสร้าง Card ลิงก์ระบบ...");
+  try{
+    if(ctx==="indicator"){
+      const id=currentEditBlockId; const ind=allIndicators.find(i=>i.id===id);
+      if(!ind) throw new Error("ไม่พบตัวชี้วัด (เปิดตัวชี้วัดที่ต้องการก่อน)");
+      const arr=[...(ind.mediaItems||[]),...items];
+      await db.collection("indicators").doc(id).update({mediaItems:arr});
+      ind.mediaItems=arr; openIndicators.add(id); renderIndicators();
+    } else if(ctx==="history"){
+      const arr=[...(historyData.mediaItems||[]),...items];
+      await db.collection("history").doc("profile").update({mediaItems:arr});
+      historyData.mediaItems=arr; renderHistory();
+    } else if(ctx==="challenge"){
+      const arr=[...(challengeData.mediaItems||[]),...items];
+      await db.collection("challenge").doc("main").update({mediaItems:arr});
+      challengeData.mediaItems=arr; renderChallenge();
+    } else if(ctx==="clips"){
+      const arr=[...(clipsData.mediaItems||[]),...items];
+      await db.collection("clips").doc("main").set({mediaItems:arr},{merge:true});
+      clipsData.mediaItems=arr; renderClips();
+    } else { throw new Error("ไม่ทราบบริบท"); }
+    Swal.close(); SW.ok("สร้าง "+items.length+" Card ลิงก์ระบบแล้ว");
+    scBulkData=[]; $("scBulkModal").classList.remove("open");
   }catch(e){ Swal.close(); SW.err("บันทึกไม่สำเร็จ", e.message); }
 };
 
