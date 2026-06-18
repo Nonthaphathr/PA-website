@@ -914,16 +914,23 @@ a.link-card{text-decoration:none}
 .media-size-half .ic-img,.media-size-third .ic-img,.media-size-twothird .ic-img{aspect-ratio:4/3;max-height:none}
 
 /* Card ลิงก์ระบบ (syscard) */
-.syscard{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surface);box-shadow:0 8px 28px rgba(255,107,24,.10);max-width:100%}
-.syscard-cover{position:relative;height:185px;background-size:cover;background-position:center;background-color:#16110d;display:flex;align-items:center;justify-content:center;padding:1rem}
+.syscard{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surface);box-shadow:0 8px 28px rgba(255,107,24,.10);max-width:100%;height:100%;display:flex;flex-direction:column}
+.syscard-cover{position:relative;height:185px;flex-shrink:0;background-size:cover;background-position:center;background-color:#16110d;display:flex;align-items:center;justify-content:center;padding:1rem}
 .syscard-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.22),rgba(0,0,0,.72))}
 .syscard-cover-title{position:relative;z-index:1;color:#fff;font-family:var(--font-head);font-weight:800;font-size:1.22rem;text-align:center;text-shadow:0 2px 12px rgba(0,0,0,.85);line-height:1.35;word-break:break-word}
-.syscard-body{padding:1.1rem 1.2rem 1.25rem}
-.syscard-cat{display:inline-block;font-size:.72rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border:1px solid var(--line-2);border-radius:999px;padding:3px 12px;margin-bottom:9px;letter-spacing:.02em}
+.syscard-body{padding:1.1rem 1.2rem 1.25rem;flex:1 1 auto;display:flex;flex-direction:column}
+.syscard-cat{display:inline-block;align-self:flex-start;font-size:.72rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border:1px solid var(--line-2);border-radius:999px;padding:3px 12px;margin-bottom:9px;letter-spacing:.02em}
 .syscard-name{font-family:var(--font-head);font-weight:800;font-size:1.06rem;color:var(--text);margin-bottom:6px;line-height:1.35}
 .syscard-desc{font-size:.9rem;color:var(--text-2);line-height:1.7;margin-bottom:14px;white-space:pre-line}
-.syscard-link{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-weight:700;font-size:.9rem;padding:10px 18px;border-radius:11px;text-decoration:none;box-shadow:0 6px 18px var(--accent-glow);transition:.2s}
+.syscard-link{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin-top:auto;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-weight:700;font-size:.9rem;padding:10px 18px;border-radius:11px;text-decoration:none;box-shadow:0 6px 18px var(--accent-glow);transition:.2s}
 .syscard-link:hover{transform:translateY(-2px);box-shadow:0 10px 24px var(--accent-glow)}
+
+/* การ์ด/บล็อกในแถวเดียวกันสูงเท่ากัน: ให้เนื้อหายืดเต็มเซลล์ที่กริดยืดให้ (ดูสบายตา)
+   เมื่อบล็อกมี syscard หรือ ภาพ+คำบรรยาย ให้จัดเนื้อหาเริ่มจากบนสุดแทนกึ่งกลาง
+   เพื่อให้ทุกการ์ดในแถวยืดตามการ์ดที่ยาวที่สุด ส่วนที่ว่างไปอยู่ใต้เนื้อหา */
+.media-item .media-item-body:has(.syscard),
+.media-item .media-item-body:has(.ic-figure){justify-content:flex-start}
+.media-item .media-item-body:has(.ic-figure):not(:has(.ic-img-empty)) .ic-figure{height:100%}
 
 /* Bulk image+caption modal */
 .ic-bulk-note{font-size:.8rem;color:var(--text-dim);margin-bottom:10px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:8px;padding:8px 12px;line-height:1.6}
@@ -1957,7 +1964,12 @@ let siteSettings = {
   gasEndpoint: "",
   driveFolderId: ""
 };
-let adminUnlocked = false; // เก็บสถานะ PIN จนกว่าจะรีโหลด
+// สถานะปลดล็อกผู้ดูแล — จำไว้ทั้งแท็บ (กรอก PIN ครั้งเดียว จนกว่าจะปิดแท็บ)
+// ใช้ sessionStorage: คงอยู่ข้ามการรีโหลดในแท็บเดิม แต่ล้างเมื่อปิดแท็บ
+function adminUnlockGet(){ try{ return sessionStorage.getItem("pa_admin_unlocked")==="1"; }catch(e){ return false; } }
+function adminUnlockSet(v){ try{ v?sessionStorage.setItem("pa_admin_unlocked","1"):sessionStorage.removeItem("pa_admin_unlocked"); }catch(e){} }
+let adminUnlocked = adminUnlockGet();
+let pinIntent = "edit"; // "edit" = เข้าโหมดแก้ไข (มาจาก FAB) | "settings" = เปิด modal ตั้งค่า (มาจาก navbar)
 
 let allIndicators = []; // อาร์เรย์ตัวชี้วัดทั้งหมด
 
@@ -3080,7 +3092,9 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape") closeLightbox()});
 // ============================================================
 // SETTINGS MODAL
 // ============================================================
+// เปิด modal ตั้งค่า (จากปุ่มเฟืองบน navbar) — ถ้ายังไม่ปลดล็อกให้กรอก PIN ก่อน
 function openSettings(){
+  pinIntent = "settings";
   $("settingsOverlay").classList.add("open");
   if(!adminUnlocked){
     $("pinGate").style.display = "block";
@@ -3091,11 +3105,23 @@ function openSettings(){
     showSettingsBody();
   }
 }
+// เข้าสู่โหมดแก้ไข (จากปุ่มเฟือง floating) — ปลดล็อกแล้วแสดงปุ่มแก้ไข ไม่เปิด modal ตั้งค่า
+function enterEditMode(){
+  if(adminUnlocked){
+    showToast("อยู่ในโหมดแก้ไขอยู่แล้ว ✏️","ok");
+    return;
+  }
+  pinIntent = "edit";
+  $("settingsOverlay").classList.add("open");
+  $("pinGate").style.display = "block";
+  $("settingsBody").style.display = "none";
+  setTimeout(()=>$("pinInputs").querySelector("input").focus(),200);
+}
 function closeSettings(){
   $("settingsOverlay").classList.remove("open");
 }
-$("settingsBtn").onclick = openSettings;
-$("fabAdmin").onclick = openSettings;
+$("settingsBtn").onclick = openSettings;   // เฟืองบน navbar → เปิด modal ตั้งค่า
+$("fabAdmin").onclick = enterEditMode;      // เฟือง floating → เข้าโหมดแก้ไข
 $("settingsClose").onclick = closeSettings;
 
 // PIN — กรอกอัตโนมัติข้ามช่อง
@@ -3113,7 +3139,14 @@ function checkPin(){
   const pin = Array.from(pinFields).map(i=>i.value).join("");
   if(pin===siteSettings.pin||pin==="1234"){
     adminUnlocked = true;
-    showSettingsBody();
+    adminUnlockSet(true);                 // จำไว้ทั้งแท็บ — ไม่ต้องกรอกซ้ำจนกว่าจะปิดแท็บ
+    pinFields.forEach(i=>i.value="");     // ล้างช่อง PIN
+    if(pinIntent==="settings"){
+      showSettingsBody();                 // มาจาก navbar → เปิดแผงตั้งค่า
+    } else {
+      closeSettings();                    // มาจาก FAB → ปิด overlay เข้าโหมดแก้ไขเลย
+      showToast("เข้าสู่โหมดแก้ไขแล้ว ✏️","ok");
+    }
     renderAll(); // re-render เพื่อแสดงปุ่มแก้ไข
   } else {
     $("pinErr").textContent = "รหัส PIN ไม่ถูกต้อง";
