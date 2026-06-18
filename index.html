@@ -932,6 +932,25 @@ a.link-card{text-decoration:none}
 .media-item .media-item-body:has(.ic-figure){justify-content:flex-start}
 .media-item .media-item-body:has(.ic-figure):not(:has(.ic-img-empty)) .ic-figure{height:100%}
 
+/* Block-mode toggle (ความปลอดภัย) */
+.block-toggle{display:flex;align-items:flex-start;gap:12px;cursor:pointer;padding:12px 14px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface-2);transition:.2s}
+.block-toggle:hover{border-color:var(--accent)}
+.block-toggle input{position:absolute;opacity:0;width:0;height:0}
+.block-toggle-track{flex-shrink:0;width:46px;height:26px;border-radius:999px;background:#d9cabe;position:relative;transition:.25s;margin-top:2px}
+.block-toggle-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:.25s}
+.block-toggle input:checked + .block-toggle-track{background:linear-gradient(135deg,var(--accent),var(--accent-2))}
+.block-toggle input:checked + .block-toggle-track .block-toggle-thumb{left:23px}
+.block-toggle-label{display:flex;flex-direction:column;gap:3px;line-height:1.5}
+.block-toggle-label b{font-size:.95rem;color:var(--text)}
+.block-toggle-label small{font-size:.8rem;color:var(--text-dim);line-height:1.6}
+
+/* Placeholder เมื่อเนื้อหาฝัง (วิดีโอ/เอกสาร) ถูกปิดกั้น */
+.embed-blocked{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;min-height:180px;height:100%;padding:28px 20px;border:2px dashed var(--line-2);border-radius:12px;background:repeating-linear-gradient(45deg,#fff7f2,#fff7f2 12px,#fff3e9 12px,#fff3e9 24px);color:var(--text-2);cursor:pointer;transition:.2s}
+.embed-blocked:hover{border-color:var(--accent);background:#fff3e9}
+.embed-blocked-ic{font-size:2.4rem;line-height:1}
+.embed-blocked-txt{font-weight:700;font-size:.95rem;color:var(--text)}
+.embed-blocked-txt small{display:block;font-weight:500;font-size:.82rem;color:var(--text-dim);margin-top:4px}
+
 /* Bulk image+caption modal */
 .ic-bulk-note{font-size:.8rem;color:var(--text-dim);margin-bottom:10px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:8px;padding:8px 12px;line-height:1.6}
 .ic-bulk-rows{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow:auto;padding-right:4px}
@@ -1505,6 +1524,15 @@ a.link-card{text-decoration:none}
           <div class="field"><label>Favicon URL</label><input id="s_faviconUrl" placeholder="https://..."/></div>
           <div class="field"><label>รหัส PIN ผู้ดูแล (4 หลัก)</label><input id="s_pin" maxlength="4" type="text" placeholder="0000"/></div>
           <div class="divider"></div>
+          <div class="section-head-label">🔒 ความปลอดภัย — โหมดปิดกั้นการเข้าถึง</div>
+          <label class="block-toggle" for="s_blockLinks">
+            <input type="checkbox" id="s_blockLinks"/>
+            <span class="block-toggle-track"><span class="block-toggle-thumb"></span></span>
+            <span class="block-toggle-label">
+              <b>เปิดโหมดปิดกั้นไม่ให้เข้าถึงลิงก์/เนื้อหาฝัง</b>
+              <small>เมื่อเปิด ผู้เข้าชมจะคลิกเปิดลิงก์ระบบ/ลิงก์ฝัง/วิดีโอ/เอกสารฝังไม่ได้ และจะเด้งข้อความแจ้งเตือนแทน — ใช้ป้องกันความปลอดภัยของระบบที่ฝังไว้ แล้วค่อยปิดโหมดนี้เฉพาะช่วงกรรมการประเมิน (ผู้ดูแลที่ปลดล็อกแล้วยังเปิดได้ตามปกติ)</small>
+            </span>
+          </label>
           <div class="section-head-label">👥 คณะกรรมการผู้ประเมิน (แสดงใต้ Hero — 3 คน)</div>
           <div class="field"><label>ข้อความต้อนรับคณะกรรมการ (Fade-in)</label><input id="s_committeeWelcome" placeholder="ยินดีต้อนรับคณะกรรมการ"/></div>
           <div class="field"><label>คำบรรยายใต้หัวข้อ</label><input id="s_committeeSub" placeholder="คณะกรรมการประเมินเพื่อคงวิทยฐานะ"/></div>
@@ -1953,6 +1981,7 @@ let siteSettings = {
   portraitUrl: "",
   faviconUrl: "",
   pin: "1234",
+  blockLinks: false,   // โหมดปิดกั้นไม่ให้เข้าถึงลิงก์/เนื้อหาฝัง (เปิดเฉพาะช่วงกรรมการประเมิน)
   welcomeText: "ยินดีต้อนรับคณะกรรมการผู้ประเมิน",
   committeeWelcome: "ยินดีต้อนรับคณะกรรมการ",
   committeeSub: "คณะกรรมการประเมินเพื่อคงวิทยฐานะ",
@@ -1970,6 +1999,40 @@ function adminUnlockGet(){ try{ return sessionStorage.getItem("pa_admin_unlocked
 function adminUnlockSet(v){ try{ v?sessionStorage.setItem("pa_admin_unlocked","1"):sessionStorage.removeItem("pa_admin_unlocked"); }catch(e){} }
 let adminUnlocked = adminUnlockGet();
 let pinIntent = "edit"; // "edit" = เข้าโหมดแก้ไข (มาจาก FAB) | "settings" = เปิด modal ตั้งค่า (มาจาก navbar)
+
+// ============================================================
+// โหมดปิดกั้นการเข้าถึงลิงก์/เนื้อหาฝัง (ความปลอดภัย)
+//   - ผู้ดูแลที่ปลดล็อกแล้ว (adminUnlocked) ยังเปิดลิงก์/เนื้อหาได้ตามปกติ
+//   - ผู้เข้าชมทั่วไป/กรรมการ จะถูกปิดกั้นเมื่อเปิดโหมดนี้
+// ============================================================
+function LINKS_BLOCKED(){ return !!siteSettings.blockLinks && !adminUnlocked; }
+function blockedLinkWarn(){
+  Swal.fire({
+    iconHtml:"🔒",
+    title:"แอดมินไม่อนุญาตให้คุณเข้าชมลิงก์",
+    html:'<div style="font-size:.92rem;color:#7a6050;line-height:1.7">เนื้อหาฝัง/ลิงก์ระบบถูกปิดกั้นชั่วคราวเพื่อความปลอดภัย<br>กรุณาติดต่อผู้ดูแลระบบหากต้องการเข้าชม</div>',
+    confirmButtonText:"รับทราบ",
+    confirmButtonColor:"#ff6b18"
+  });
+  return false;
+}
+function blockedEmbedPlaceholder(label){
+  return `<div class="embed-blocked" onclick="blockedLinkWarn()" title="ปิดกั้นการเข้าถึง">
+    <div class="embed-blocked-ic">🔒</div>
+    <div class="embed-blocked-txt">${esc(label||"เนื้อหาฝังถูกปิดกั้น")}<small>แอดมินไม่อนุญาตให้เข้าชมในขณะนี้</small></div>
+  </div>`;
+}
+// สกัดคลิกลิงก์ภายนอกทุกจุดในเนื้อหา เมื่อเปิดโหมดปิดกั้น (capture phase ดักก่อนเปิดแท็บใหม่)
+document.addEventListener("click", e=>{
+  if(!LINKS_BLOCKED()) return;
+  const a = e.target.closest && e.target.closest('a[href]');
+  if(!a) return;
+  const href = a.getAttribute("href") || "";
+  if(!/^https?:/i.test(href)) return;        // ลิงก์ภายในเว็บ (#...) ไม่ปิดกั้น
+  if(a.closest(".nav, .drawer")) return;      // เมนูนำทางไม่เกี่ยว
+  e.preventDefault(); e.stopPropagation();
+  blockedLinkWarn();
+}, true);
 
 let allIndicators = []; // อาร์เรย์ตัวชี้วัดทั้งหมด
 
@@ -2334,8 +2397,9 @@ function renderHistory(){
   // Profile header — ดึงข้อมูลจาก settings ให้ดูเป็นทางการ
   const s = siteSettings;
   const initial = (s.name||"?").trim().replace(/^(นาย|นาง|นางสาว|ดร\.|ผศ\.|รศ\.|ศ\.)\s*/,"").charAt(0) || "ค";
-  const avatar = s.logoUrl
-    ? `<div class="profile-avatar"><img src="${esc(s.logoUrl)}" onerror="this.parentElement.textContent='${esc(initial)}'"/></div>`
+  const photoUrl = s.portraitUrl || s.logoUrl || "";   // ใช้รูปบุคคลผู้รับการประเมินก่อน (สำรองด้วยโลโก้)
+  const avatar = photoUrl
+    ? `<div class="profile-avatar"><img src="${esc(photoUrl)}" alt="รูปผู้รับการประเมิน" onerror="this.parentElement.textContent='${esc(initial)}'"/></div>`
     : `<div class="profile-avatar">${esc(initial)}</div>`;
   const profileHeader = `
     <div class="profile-header">
@@ -2547,11 +2611,13 @@ function icMediaHTML(item, mt, isAdmin, context, bid, idx, cid){
     return `<img class="ic-img" src="${esc(src)}" alt="${esc(item.title||"")}" loading="lazy" onclick="openLightbox('${esc(src)}')" onerror="${driveImgOnError(item.url)}"/>`;
   }
   if(mt==="video"){
+    if(LINKS_BLOCKED()) return blockedEmbedPlaceholder("วิดีโอถูกปิดกั้น");
     const ev = convertVideoUrl(item.url||"");
     return ev ? `<div class="video-embed"><iframe src="${esc(ev)}" loading="lazy" allowfullscreen></iframe></div>`
               : `<div class="empty-state">ลิงก์วิดีโอไม่ถูกต้อง</div>`;
   }
   if(mt==="drivedoc"){
+    if(LINKS_BLOCKED()) return blockedEmbedPlaceholder("เอกสารฝังถูกปิดกั้น");
     const pv = convertDriveToPreview(item.url||"");
     return `<div class="drive-embed"><iframe src="${esc(pv)}" loading="lazy"></iframe></div>`;
   }
@@ -2626,10 +2692,14 @@ function renderMediaItems(items, context, blockId){
           ${imgs.map((_,i)=>`<div class="carousel-dot${i===0?" active":""}" onclick="carouselGo('${cid}',${i})"></div>`).join("")}
         </div>`:""}`;
     } else if(type==="video"){
-      const embedUrl = convertVideoUrl(item.url||"");
-      bodyHtml = embedUrl
-        ? `<div class="video-embed"><iframe src="${esc(embedUrl)}" allowfullscreen loading="lazy"></iframe></div>`
-        : `<div class="empty-state">ลิงก์วิดีโอไม่ถูกต้อง: ${esc(item.url)}</div>`;
+      if(LINKS_BLOCKED()){
+        bodyHtml = blockedEmbedPlaceholder("วิดีโอถูกปิดกั้น");
+      } else {
+        const embedUrl = convertVideoUrl(item.url||"");
+        bodyHtml = embedUrl
+          ? `<div class="video-embed"><iframe src="${esc(embedUrl)}" allowfullscreen loading="lazy"></iframe></div>`
+          : `<div class="empty-state">ลิงก์วิดีโอไม่ถูกต้อง: ${esc(item.url)}</div>`;
+      }
     } else if(type==="linkcard"){
       bodyHtml = `
         <a class="link-card" href="${esc(item.url||"#")}" target="_blank" rel="noopener">
@@ -2668,7 +2738,9 @@ function renderMediaItems(items, context, blockId){
       </div>`;
     } else if(type==="drivedoc"){
       const previewUrl = convertDriveToPreview(item.url||"");
-      bodyHtml = `<div class="drive-embed"><iframe src="${esc(previewUrl)}" loading="lazy"></iframe></div>
+      bodyHtml = LINKS_BLOCKED()
+        ? blockedEmbedPlaceholder("เอกสารฝังถูกปิดกั้น") + `${item.title?`<div style="font-size:.85rem;color:var(--text-dim);margin-top:6px">${esc(item.title)}</div>`:""}`
+        : `<div class="drive-embed"><iframe src="${esc(previewUrl)}" loading="lazy"></iframe></div>
         ${item.title?`<div style="font-size:.85rem;color:var(--text-dim);margin-top:6px">${esc(item.title)}</div>`:""}`;
     } else if(type==="file"){
       const files = item.files||[];
@@ -3175,6 +3247,7 @@ function showSettingsBody(){
   $("s_heroUrl").value = siteSettings.heroUrl||"";
   $("s_faviconUrl").value = siteSettings.faviconUrl||"";
   $("s_pin").value = siteSettings.pin||"";
+  $("s_blockLinks").checked = !!siteSettings.blockLinks;
   $("s_welcomeText").value = siteSettings.welcomeText||"ยินดีต้อนรับคณะกรรมการผู้ประเมิน";
   $("s_committeeWelcome").value = siteSettings.committeeWelcome||"ยินดีต้อนรับคณะกรรมการ";
   $("s_committeeSub").value = siteSettings.committeeSub||"";
@@ -3239,6 +3312,7 @@ $("saveSettingsBtn").onclick = async()=>{
     heroUrl: $("s_heroUrl").value.trim(),
     faviconUrl: $("s_faviconUrl").value.trim(),
     pin: $("s_pin").value.trim()||"1234",
+    blockLinks: $("s_blockLinks").checked,
     welcomeText: $("s_welcomeText").value.trim()||"ยินดีต้อนรับคณะกรรมการผู้ประเมิน",
     committeeWelcome: $("s_committeeWelcome").value.trim()||"ยินดีต้อนรับคณะกรรมการ",
     committeeSub: $("s_committeeSub").value.trim(),
@@ -3258,6 +3332,7 @@ $("saveSettingsBtn").onclick = async()=>{
     Object.assign(siteSettings,data);
     applySiteSettings();
     renderCommittee();
+    renderAll();   // รีเฟรชเนื้อหาทั้งหมด (โหมดปิดกั้น/รูปโปรไฟล์ ฯลฯ)
     Swal.close();
     SW.ok("บันทึกแล้ว");
   }catch(e){ Swal.close(); SW.err("บันทึกไม่สำเร็จ",e.message); }
