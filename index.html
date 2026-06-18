@@ -642,6 +642,23 @@ a.link-card{text-decoration:none}
 }
 #fabAdmin:hover{transform:scale(1.1) rotate(30deg);box-shadow:0 12px 40px var(--accent-glow)}
 
+/* ปุ่มออกจากโหมดแก้ไข — โผล่เฉพาะตอนอยู่ในโหมดแก้ไข */
+#fabExit{
+  position:fixed;bottom:28px;right:28px;z-index:151;
+  display:none;align-items:center;gap:8px;
+  height:52px;padding:0 20px;border-radius:999px;
+  background:linear-gradient(135deg,#1a1008,#4a3520);
+  color:#fff;font-family:var(--font-head);font-weight:700;font-size:.92rem;
+  box-shadow:0 8px 30px rgba(26,16,8,.35);
+  border:1px solid rgba(255,255,255,.12);
+  transition:.25s;
+}
+#fabExit span{font-size:1.1rem;line-height:1}
+#fabExit:hover{transform:translateY(-2px);box-shadow:0 12px 38px rgba(26,16,8,.45);background:linear-gradient(135deg,var(--accent-2),var(--accent))}
+/* สลับ: โหมดปกติ → โชว์เฟือง / โหมดแก้ไข → โชว์ปุ่มออก */
+body.admin-mode #fabAdmin{display:none}
+body.admin-mode #fabExit{display:flex}
+
 /* ============================================================
    OVERLAY + MODAL (Settings / Media)
    ============================================================ */
@@ -1117,6 +1134,7 @@ a.link-card{text-decoration:none}
   .add-media-row{flex-direction:column}
   .btn-add-media{width:100%;justify-content:center}
   #fabAdmin{width:50px;height:50px;bottom:20px;right:20px;font-size:1.2rem}
+  #fabExit{height:46px;padding:0 16px;bottom:20px;right:20px;font-size:.85rem}
 }
 
 /* SweetAlert2 custom */
@@ -1448,7 +1466,8 @@ a.link-card{text-decoration:none}
 </footer>
 
 <!-- FAB Settings -->
-<button id="fabAdmin" title="แผงผู้ดูแล">⚙</button>
+<button id="fabAdmin" title="เข้าสู่โหมดแก้ไข">⚙</button>
+<button id="fabExit" title="ออกจากโหมดแก้ไข"><span>🚪</span> ออกจากโหมดแก้ไข</button>
 
 <!-- Welcome Ticker — แถบข้อความต้อนรับแนวตั้ง ขวามือ -->
 <div class="welcome-ticker" id="welcomeTicker">
@@ -3192,9 +3211,26 @@ function enterEditMode(){
 function closeSettings(){
   $("settingsOverlay").classList.remove("open");
 }
+// ออกจากโหมดแก้ไข — ล็อกแอดมินใหม่ (ต้องกรอก PIN อีกครั้งเพื่อเข้า) แล้วซ่อนปุ่มแก้ไข
+async function exitEditMode(){
+  const ok = await SW.confirm("ออกจากโหมดแก้ไข?","ปุ่มแก้ไขทั้งหมดจะถูกซ่อน และต้องกรอกรหัส PIN อีกครั้งหากต้องการกลับเข้าโหมดแก้ไข");
+  if(!ok) return;
+  adminUnlocked = false;
+  adminUnlockSet(false);        // ล้างสถานะปลดล็อกในแท็บ
+  closeSettings();
+  syncAdminMode();
+  renderAll();                  // re-render เพื่อซ่อนปุ่มแก้ไข
+  showToast("ออกจากโหมดแก้ไขแล้ว 🔒","ok");
+}
+// ซิงก์การแสดงผลปุ่ม FAB ตามสถานะปลดล็อก (เฟือง=เข้า / ปุ่มออก=อยู่ในโหมดแก้ไข)
+function syncAdminMode(){
+  document.body.classList.toggle("admin-mode", adminUnlocked);
+}
 $("settingsBtn").onclick = openSettings;   // เฟืองบน navbar → เปิด modal ตั้งค่า
 $("fabAdmin").onclick = enterEditMode;      // เฟือง floating → เข้าโหมดแก้ไข
+$("fabExit").onclick = exitEditMode;        // ปุ่ม floating → ออกจากโหมดแก้ไข
 $("settingsClose").onclick = closeSettings;
+syncAdminMode();                            // ตั้งสถานะเริ่มต้น (เผื่อปลดล็อกค้างจาก sessionStorage)
 
 // PIN — กรอกอัตโนมัติข้ามช่อง
 const pinFields = $("pinInputs").querySelectorAll("input");
@@ -3212,6 +3248,7 @@ function checkPin(){
   if(pin===siteSettings.pin||pin==="1234"){
     adminUnlocked = true;
     adminUnlockSet(true);                 // จำไว้ทั้งแท็บ — ไม่ต้องกรอกซ้ำจนกว่าจะปิดแท็บ
+    syncAdminMode();                      // สลับ FAB → ปุ่มออกจากโหมดแก้ไข
     pinFields.forEach(i=>i.value="");     // ล้างช่อง PIN
     if(pinIntent==="settings"){
       showSettingsBody();                 // มาจาก navbar → เปิดแผงตั้งค่า
