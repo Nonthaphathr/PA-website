@@ -922,6 +922,16 @@ body.admin-mode #fabExit{display:flex}
 /* ภาพ + คำบรรยาย (imgcaption) */
 .ic-figure{margin:0;display:flex;flex-direction:column;gap:10px}
 .ic-img{width:100%;border-radius:12px;object-fit:cover;max-height:460px;cursor:zoom-in;border:1px solid var(--line)}
+.ic-img.ic-img-linked{cursor:pointer}
+a:has(.ic-img-linked){display:block}
+/* ป้าย "↗" บอกว่ารูปคลิกเพื่อเปิดลิงก์ได้ (ใช้ได้ทั้ง ภาพเดียว และ ภาพ+คำบรรยาย) */
+.ic-img-linkwrap,a:has(.media-img-linked){position:relative}
+.ic-img-linkwrap::after,a:has(.media-img-linked)::after{
+  content:"↗ เปิดลิงก์";position:absolute;top:10px;right:10px;
+  background:rgba(26,16,8,.78);color:#fff;font-size:.74rem;font-weight:700;
+  padding:5px 10px;border-radius:999px;backdrop-filter:blur(3px);
+  opacity:0;transform:translateY(-4px);transition:.2s;pointer-events:none}
+.ic-img-linkwrap:hover::after,a:has(.media-img-linked):hover::after{opacity:1;transform:translateY(0)}
 .ic-img-empty{width:100%;max-width:420px;margin:0 auto;aspect-ratio:4/3;border:2px dashed var(--line-2);border-radius:14px;display:grid;place-items:center;gap:6px;color:var(--accent);font-weight:700;cursor:pointer;background:var(--accent-soft);transition:.2s}
 .ic-img-empty:hover{background:#fff3e6;border-color:var(--accent)}
 /* บล็อกภาพ+คำบรรยายที่ยังว่าง: จัดทุกอย่างกึ่งกลาง */
@@ -931,9 +941,24 @@ body.admin-mode #fabExit{display:flex}
 .media-size-half .ic-img,.media-size-third .ic-img,.media-size-twothird .ic-img{aspect-ratio:4/3;max-height:none}
 
 /* Card ลิงก์ระบบ (syscard) */
-.syscard{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surface);box-shadow:0 8px 28px rgba(255,107,24,.10);max-width:100%;height:100%;display:flex;flex-direction:column}
-.syscard-cover{position:relative;height:185px;flex-shrink:0;background-size:cover;background-position:center;background-color:#16110d;display:flex;align-items:center;justify-content:center;padding:1rem}
+.syscard{position:relative;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surface);box-shadow:0 8px 28px rgba(255,107,24,.10);max-width:100%;height:100%;display:flex;flex-direction:column;transform:perspective(900px) rotateX(0) rotateY(0);transition:transform .4s cubic-bezier(.2,.7,.2,1),box-shadow .4s;will-change:transform;animation:syscardSway 7s ease-in-out infinite}
+.syscard-cover{position:relative;height:185px;flex-shrink:0;background-size:cover;background-position:center;background-color:#16110d;display:flex;align-items:center;justify-content:center;padding:1rem;overflow:hidden}
 .syscard-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.22),rgba(0,0,0,.72))}
+/* ✨ Shine sweep อัตโนมัติทุก 3.5 วินาที (แสงวิ่งผ่านปกการ์ดระบบ) */
+.syscard-cover::before{
+  content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.18) 46%,rgba(255,255,255,.62) 50%,rgba(255,255,255,.18) 54%,transparent 62%);
+  transform:translateX(-130%) skewX(-18deg);
+  animation:syscardShine 3.5s ease-in-out infinite;
+}
+@keyframes syscardShine{
+  0%{transform:translateX(-130%) skewX(-18deg)}
+  18%{transform:translateX(130%) skewX(-18deg)}   /* แสงวิ่งจบใน ~0.63 วิ */
+  100%{transform:translateX(130%) skewX(-18deg)}  /* พักรอจนครบ 3.5 วิ แล้ววนใหม่ */
+}
+@media (prefers-reduced-motion:reduce){
+  .syscard-cover::before{animation:none;opacity:0}
+}
 .syscard-cover-title{position:relative;z-index:1;color:#fff;font-family:var(--font-head);font-weight:800;font-size:1.22rem;text-align:center;text-shadow:0 2px 12px rgba(0,0,0,.85);line-height:1.35;word-break:break-word}
 .syscard-body{padding:1.1rem 1.2rem 1.25rem;flex:1 1 auto;display:flex;flex-direction:column}
 .syscard-cat{display:inline-block;align-self:flex-start;font-size:.72rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border:1px solid var(--line-2);border-radius:999px;padding:3px 12px;margin-bottom:9px;letter-spacing:.02em}
@@ -942,12 +967,74 @@ body.admin-mode #fabExit{display:flex}
 .syscard-link{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin-top:auto;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-weight:700;font-size:.9rem;padding:10px 18px;border-radius:11px;text-decoration:none;box-shadow:0 6px 18px var(--accent-glow);transition:.2s}
 .syscard-link:hover{transform:translateY(-2px);box-shadow:0 10px 24px var(--accent-glow)}
 
+/* ============================================================
+   ✨ 3D Parallax Tilt / Boundary Glow — ลูกเล่นทั้งการ์ดระบบ
+   - Auto: โคลงเคลงเบา ๆ เป็นจังหวะ (syscardSway) เหลื่อมเวลากันเป็นคลื่น
+   - Hover: เอียงตามเมาส์ (ตั้งค่า transform ด้วย JS) + ขอบเรืองแสงสีส้มตามตำแหน่งเมาส์
+   ============================================================ */
+@keyframes syscardSway{
+  0%,100%{transform:perspective(900px) rotateX(0deg) rotateY(0deg)}
+  25%{transform:perspective(900px) rotateX(1.3deg) rotateY(-1.7deg)}
+  50%{transform:perspective(900px) rotateX(.2deg) rotateY(1.6deg)}
+  75%{transform:perspective(900px) rotateX(-1.1deg) rotateY(-.6deg)}
+}
+/* เหลื่อมจังหวะให้ดูเป็น "คลื่น" ตามคอลัมน์ */
+.media-item:nth-child(3n+2) .syscard{animation-delay:-2.3s}
+.media-item:nth-child(3n) .syscard{animation-delay:-4.6s}
+/* ขณะเอียงตามเมาส์ — หยุด auto-sway แล้วให้ JS คุม transform แทน */
+.syscard.tilting{animation:none;transition:transform .1s linear,box-shadow .4s}
+.syscard:hover{box-shadow:0 20px 54px rgba(255,107,24,.30),0 0 0 1px rgba(255,150,60,.22)}
+/* ขอบเรืองแสง (Boundary Glow) สว่างตรงตำแหน่งที่เมาส์ชี้ใกล้ขอบ */
+.syscard::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;padding:1.6px;z-index:6;pointer-events:none;
+  background:radial-gradient(170px circle at var(--mx,50%) var(--my,50%),rgba(255,150,60,.95),rgba(255,150,60,0) 62%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  opacity:0;transition:opacity .3s}
+.syscard:hover::before{opacity:1}
+@media (prefers-reduced-motion:reduce){
+  .syscard{animation:none;transition:box-shadow .3s}
+  .syscard.tilting{transition:box-shadow .3s}
+}
+
 /* การ์ด/บล็อกในแถวเดียวกันสูงเท่ากัน: ให้เนื้อหายืดเต็มเซลล์ที่กริดยืดให้ (ดูสบายตา)
    เมื่อบล็อกมี syscard หรือ ภาพ+คำบรรยาย ให้จัดเนื้อหาเริ่มจากบนสุดแทนกึ่งกลาง
    เพื่อให้ทุกการ์ดในแถวยืดตามการ์ดที่ยาวที่สุด ส่วนที่ว่างไปอยู่ใต้เนื้อหา */
 .media-item .media-item-body:has(.syscard),
 .media-item .media-item-body:has(.ic-figure){justify-content:flex-start}
 .media-item .media-item-body:has(.ic-figure):not(:has(.ic-img-empty)) .ic-figure{height:100%}
+
+/* ============================================================
+   🎬 ลูกเล่นบล็อกภาพ+คำบรรยาย (imgcaption)
+   - Ken Burns: ภาพซูมเข้านุ่ม ๆ ตอน hover ในกรอบมุมโค้ง
+   - Scroll Reveal: บล็อกค่อย ๆ ปรากฏตอนเลื่อนถึง (เคียงข้าง: ภาพซ้าย/ข้อความขวา เหลื่อมจังหวะ)
+   ============================================================ */
+/* กรอบภาพสำหรับ clip การซูม */
+.ic-media-frame{overflow:hidden;border-radius:12px;position:relative}
+.ic-media-frame .ic-img{border:none;border-radius:0;display:block}
+.ic-media-frame .ic-img,.ic-media-frame .media-img,.ic-media-frame .carousel-track img{transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+.ic-figure:hover .ic-media-frame .ic-img,
+.ic-figure:hover .ic-media-frame .media-img{transform:scale(1.06)}
+/* แบบเคียงข้าง: ซูมภาพใน .ms-media */
+.media-size-sidetext .ms-media{overflow:hidden;border-radius:14px}
+.media-size-sidetext .ms-media img{transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+.media-size-sidetext:hover .ms-media img{transform:scale(1.05)}
+
+/* Scroll reveal — เพิ่มคลาส .reveal-on ผ่าน JS (เฉพาะเมื่อรองรับ + ไม่ลดการเคลื่อนไหว) */
+.media-item.reveal-on .ic-figure,
+.media-item.reveal-on .ms-media,
+.media-item.reveal-on .ms-text{opacity:0;transition:opacity .75s ease,transform .75s cubic-bezier(.2,.7,.2,1)}
+.media-item.reveal-on .ic-figure{transform:translateY(30px)}
+.media-item.reveal-on .ms-media{transform:translateX(-30px)}
+.media-item.reveal-on .ms-text{transform:translateX(30px)}
+.media-item.reveal-on.in .ic-figure,
+.media-item.reveal-on.in .ms-media,
+.media-item.reveal-on.in .ms-text{opacity:1;transform:none}
+.media-item.reveal-on.in .ms-text{transition-delay:.14s}      /* ข้อความตามมาทีหลังภาพเล็กน้อย */
+@media (prefers-reduced-motion:reduce){
+  .ic-media-frame .ic-img,.media-size-sidetext .ms-media img{transition:none}
+  .ic-figure:hover .ic-media-frame .ic-img,.media-size-sidetext:hover .ms-media img{transform:none}
+}
 
 /* Block-mode toggle (ความปลอดภัย) */
 .block-toggle{display:flex;align-items:flex-start;gap:12px;cursor:pointer;padding:12px 14px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface-2);transition:.2s}
@@ -2322,7 +2409,70 @@ function renderAll(){
   renderIndicators();
   renderChallenge();
   renderClips();
+  initCardTilt();
+  initReveal();
 }
+
+// 3D Parallax Tilt + Boundary Glow สำหรับ Card ลิงก์ระบบ (เอียงตามเมาส์)
+function initCardTilt(){
+  // ข้ามอุปกรณ์สัมผัสที่ไม่มี hover (ปล่อยให้ auto-sway ทำงานอย่างเดียว)
+  if(!window.matchMedia || !window.matchMedia("(hover:hover)").matches) return;
+  document.querySelectorAll(".syscard:not([data-tilt])").forEach(card=>{
+    card.dataset.tilt = "1";
+    let raf = null, rx = 0, ry = 0;
+    card.addEventListener("pointerenter", ()=>card.classList.add("tilting"));
+    card.addEventListener("pointermove", e=>{
+      const r = card.getBoundingClientRect();
+      if(!r.width || !r.height) return;
+      const px = Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));
+      const py = Math.min(1,Math.max(0,(e.clientY-r.top)/r.height));
+      const MAX = 7;                       // องศาเอียงสูงสุด
+      ry = (px-.5)*MAX*2;                  // ซ้าย/ขวา
+      rx = (.5-py)*MAX*2;                  // ขึ้น/ลง
+      card.style.setProperty("--mx",(px*100).toFixed(1)+"%");
+      card.style.setProperty("--my",(py*100).toFixed(1)+"%");
+      if(raf) return;
+      raf = requestAnimationFrame(()=>{
+        raf = null;
+        card.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) translateY(-5px)`;
+      });
+    });
+    card.addEventListener("pointerleave", ()=>{
+      if(raf){ cancelAnimationFrame(raf); raf=null; }
+      card.classList.remove("tilting");
+      card.style.transform = "";           // กลับไปใช้ auto-sway
+    });
+  });
+}
+// Scroll-reveal สำหรับบล็อกภาพ+คำบรรยาย (ค่อย ๆ ปรากฏตอนเลื่อนถึง)
+let _revealIO = null;
+function initReveal(){
+  if(!("IntersectionObserver" in window)) return;
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+  if(!_revealIO){
+    _revealIO = new IntersectionObserver(ents=>{
+      ents.forEach(en=>{
+        if(en.isIntersecting){ en.target.classList.add("in"); _revealIO.unobserve(en.target); }
+      });
+    }, {threshold:.15, rootMargin:"0px 0px -8% 0px"});
+  }
+  document.querySelectorAll(".media-item:not([data-reveal])").forEach(mi=>{
+    // เฉพาะบล็อกภาพ+คำบรรยาย (ภาพบน-ล่าง) หรือแบบเคียงข้าง
+    if(!mi.querySelector(".ic-figure") && !mi.classList.contains("media-size-sidetext")) return;
+    mi.dataset.reveal = "1";
+    mi.classList.add("reveal-on");
+    _revealIO.observe(mi);
+  });
+}
+// ผูก tilt อัตโนมัติกับ Card ที่เรนเดอร์ใหม่ (debounce ด้วย requestAnimationFrame)
+(function(){
+  let pending = false;
+  const mo = new MutationObserver(()=>{
+    if(pending) return; pending = true;
+    requestAnimationFrame(()=>{ pending = false; initCardTilt(); initReveal(); });
+  });
+  if(document.body) mo.observe(document.body, {childList:true, subtree:true});
+})();
 
 // ประกายระยิบระยับล่องลอยรอบรูปกรรมการ (ตำแหน่ง/ขนาด/จังหวะคงที่)
 function cmSparkles(){
@@ -2627,6 +2777,9 @@ function renderClips(){
 function icMediaHTML(item, mt, isAdmin, context, bid, idx, cid){
   if(mt==="image"){
     const src = driveImageUrl(item.url);
+    if(item.imgLink){
+      return `<a href="${esc(item.imgLink)}" target="_blank" rel="noopener" title="เปิดลิงก์" class="ic-img-linkwrap"><img class="ic-img ic-img-linked" src="${esc(src)}" alt="${esc(item.title||"")}" loading="lazy" onerror="${driveImgOnError(item.url)}"/></a>`;
+    }
     return `<img class="ic-img" src="${esc(src)}" alt="${esc(item.title||"")}" loading="lazy" onclick="openLightbox('${esc(src)}')" onerror="${driveImgOnError(item.url)}"/>`;
   }
   if(mt==="video"){
@@ -2735,7 +2888,7 @@ function renderMediaItems(items, context, blockId){
       const mediaPart = icMediaHTML(item, mt, isAdmin, context, bid, idx, cid);
       mediaOnly = mediaPart;
       bodyHtml = `<figure class="ic-figure">
-        ${mediaPart}
+        <div class="ic-media-frame">${mediaPart}</div>
         ${(item.title||item.caption)?`<figcaption class="ic-cap">
           ${item.title?`<div class="ic-cap-title">${esc(item.title)}</div>`:""}
           ${item.caption?`<div class="ic-cap-text">${esc(item.caption)}</div>`:""}
@@ -3907,6 +4060,7 @@ function openMediaForm(type, ctx, existing){
             <button type="button" class="btn btn-ghost btn-sm" onclick="pickCropTo(u=>{$('mf_icUrl').value=u;})">📤 อัปโหลด/ครอป</button>
           </div>
         </div>
+        <div class="field"><label>🔗 ลิงก์เมื่อคลิกภาพ (optional)</label><input id="mf_icImgLink" placeholder="https://... (เว้นว่าง = คลิกเพื่อซูม)"/></div>
       </div>
       <div id="ic_f_video" class="ic-mfield" style="display:none">
         <div class="field"><label>ลิงก์วิดีโอ (YouTube / Google Drive)</label><input id="mf_icVideo" placeholder="https://youtu.be/... หรือ https://drive.google.com/..."/></div>
@@ -3986,6 +4140,7 @@ function openMediaForm(type, ctx, existing){
       const mt = existing.mediaType || (existing.url?"image":(existing.images&&existing.images.length?"carousel":"image"));
       setVal("mf_icMediaType", mt);
       setVal("mf_icUrl", existing.url);
+      setVal("mf_icImgLink", existing.imgLink);
       setVal("mf_icVideo", existing.mediaType==="video"?existing.url:"");
       setVal("mf_icDrive", existing.mediaType==="drivedoc"?existing.url:"");
       setVal("mf_icLink", existing.mediaType==="linkcard"?existing.url:"");
@@ -4268,7 +4423,7 @@ async function saveMediaItem(type, context){
       const mt = ($("mf_icMediaType")||{}).value || "image";
       const title=($("mf_icTitle")||{}).value.trim(), caption=($("mf_icCaption")||{}).value.trim();
       item = {type:"imgcaption", mediaType:mt, title, caption};
-      if(mt==="image"){ item.url = ($("mf_icUrl")||{}).value.trim(); }
+      if(mt==="image"){ item.url = ($("mf_icUrl")||{}).value.trim(); item.imgLink = ($("mf_icImgLink")||{}).value.trim(); }
       else if(mt==="video"){ item.url = ($("mf_icVideo")||{}).value.trim(); }
       else if(mt==="drivedoc"){ item.url = ($("mf_icDrive")||{}).value.trim(); }
       else if(mt==="linkcard"){
