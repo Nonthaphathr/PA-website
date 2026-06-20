@@ -597,6 +597,17 @@ a.link-card{text-decoration:none}
 /* Drive document embed */
 .drive-embed{border-radius:8px;overflow:hidden;border:1px solid var(--line)}
 .drive-embed iframe{width:100%;height:480px;border:none;display:block}
+/* เลือกแนวกระดาษ A4 ของเอกสารฝัง (ตั้ง/นอน) */
+.drive-portrait .drive-embed,.drive-landscape .drive-embed{margin:0 auto}
+.drive-portrait .drive-embed{aspect-ratio:210/297;max-width:min(100%,640px)}
+.drive-landscape .drive-embed{aspect-ratio:297/210;max-width:100%}
+.drive-portrait .drive-embed iframe,.drive-landscape .drive-embed iframe{height:100%}
+/* พรีวิวไฟล์เอกสารที่อัปโหลด (โหมดฝังในหน้า) — วางซ้อนทีละไฟล์ */
+.file-embed-item{margin-bottom:16px}
+.file-embed-item:last-child{margin-bottom:0}
+.file-embed-cap{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:.86rem}
+.file-embed-name{font-weight:700;color:var(--text-2);word-break:break-all}
+.file-embed-cap .file-open{flex-shrink:0}
 
 /* File list */
 .file-list{display:flex;flex-direction:column;gap:8px}
@@ -1003,6 +1014,19 @@ a:has(.ic-img-linked){display:block}
 .media-item .media-item-body:has(.syscard),
 .media-item .media-item-body:has(.ic-figure){justify-content:flex-start}
 .media-item .media-item-body:has(.ic-figure):not(:has(.ic-img-empty)) .ic-figure{height:100%}
+
+/* 🖼 โหมด "พอดีทั้งภาพ (ไม่ครอป)" — แสดงภาพตามสัดส่วนจริง (แนวตั้งก็เป็นแนวตั้ง) */
+.media-fit-contain .media-img,
+.media-fit-contain .ic-img,
+.media-fit-contain .ms-media img{
+  aspect-ratio:auto!important;object-fit:contain!important;
+  width:100%!important;height:auto!important;max-height:760px!important;
+  display:block;margin:0 auto}
+.media-fit-contain .ic-media-frame{background:var(--surface-2)}
+/* คารูเซลโหมดไม่ครอป: ความสูงเท่ากันทุกสไลด์ (letterbox) เลื่อนลื่นไม่กระตุก */
+.media-fit-contain .carousel-track img{
+  aspect-ratio:auto!important;object-fit:contain!important;
+  height:440px!important;max-height:440px!important;background:#0d0a08}
 
 /* ============================================================
    🎬 ลูกเล่นบล็อกภาพ+คำบรรยาย (imgcaption)
@@ -2830,6 +2854,23 @@ function renderMediaItems(items, context, blockId){
         <option value="third"${size==="third"?" selected":""}>▤ หนึ่งในสาม (3/แถว)</option>
         <option value="sidetext"${size==="sidetext"?" selected":""}>▦ สื่อ+ข้อความข้าง</option>
       </select>` : "";
+    const isImgType = ["image","carousel","imgcaption"].includes(item.type);
+    const fitSel = (isAdmin && isImgType) ? `
+      <select class="media-size-sel" title="สัดส่วนภาพ" onchange="updateMediaField('${context}','${bid}',${idx},'fit',this.value)">
+        <option value="cover"${(item.fit||"cover")==="cover"?" selected":""}>⬛ ครอปพอดีกรอบ</option>
+        <option value="contain"${item.fit==="contain"?" selected":""}>🖼 พอดีทั้งภาพ (ไม่ครอป)</option>
+      </select>` : "";
+    const fileDispSel = (isAdmin && item.type==="file") ? `
+      <select class="media-size-sel" title="รูปแบบแสดงไฟล์" onchange="updateMediaField('${context}','${bid}',${idx},'fileDisplay',this.value)">
+        <option value="list"${(item.fileDisplay||"list")==="list"?" selected":""}>📥 รายการดาวน์โหลด</option>
+        <option value="embed"${item.fileDisplay==="embed"?" selected":""}>🖼 พรีวิวฝังในหน้า</option>
+      </select>` : "";
+    const showOrient = item.type==="drivedoc" || (item.type==="file" && item.fileDisplay==="embed");
+    const orientSel = (isAdmin && showOrient) ? `
+      <select class="media-size-sel" title="แนวกระดาษเอกสาร" onchange="updateMediaField('${context}','${bid}',${idx},'orient',this.value)">
+        <option value="portrait"${(item.orient||"portrait")==="portrait"?" selected":""}>📄 A4 แนวตั้ง</option>
+        <option value="landscape"${item.orient==="landscape"?" selected":""}>📃 A4 แนวนอน</option>
+      </select>` : "";
     const editBtn = isAdmin ? `<button class="btn btn-xs btn-edit-media" title="แก้ไขเนื้อหานี้" onclick="editMediaItem('${context}','${bid}',${idx})">✏️ แก้ไข</button>` : "";
     const dupBtn = isAdmin ? `<button class="btn btn-xs btn-dup-media" title="ทำซ้ำเนื้อหานี้" onclick="duplicateMediaItem('${context}','${bid}',${idx})">📑 ทำซ้ำ</button>` : "";
     const delBtn = isAdmin ? `<button class="btn btn-xs btn-del-media" onclick="deleteMediaItem('${context}','${bid}',${idx})">🗑 ลบ</button>` : "";
@@ -2916,14 +2957,30 @@ function renderMediaItems(items, context, blockId){
         ${item.title?`<div style="font-size:.85rem;color:var(--text-dim);margin-top:6px">${esc(item.title)}</div>`:""}`;
     } else if(type==="file"){
       const files = item.files||[];
-      bodyHtml = `<div class="file-list">
-        ${files.map(f=>`
-          <div class="file-item">
-            <div class="file-icon">${getFileIcon(f.name)}</div>
-            <div class="file-name">${esc(f.name)}</div>
-            <a href="${esc(driveViewUrl(f.url))}" target="_blank" rel="noopener" class="file-open">เปิด ↗</a>
-          </div>`).join("")}
-      </div>`;
+      if(item.fileDisplay==="embed"){
+        // แสดงไฟล์เอกสารเป็นพรีวิวฝังในหน้า (เลือกแนว A4 ได้ผ่าน orient)
+        bodyHtml = files.map(f=>{
+          if(LINKS_BLOCKED()) return blockedEmbedPlaceholder("เอกสารถูกปิดกั้น");
+          const id = extractDriveId(f.url||"");
+          const pv = id ? `https://drive.google.com/file/d/${id}/preview` : convertDriveToPreview(f.url||"");
+          return `<div class="file-embed-item">
+            <div class="drive-embed"><iframe src="${esc(pv)}" loading="lazy"></iframe></div>
+            <div class="file-embed-cap">
+              <span class="file-embed-name">${getFileIcon(f.name)} ${esc(f.name)}</span>
+              <a href="${esc(driveViewUrl(f.url))}" target="_blank" rel="noopener" class="file-open">เปิดเต็มจอ ↗</a>
+            </div>
+          </div>`;
+        }).join("");
+      } else {
+        bodyHtml = `<div class="file-list">
+          ${files.map(f=>`
+            <div class="file-item">
+              <div class="file-icon">${getFileIcon(f.name)}</div>
+              <div class="file-name">${esc(f.name)}</div>
+              <a href="${esc(driveViewUrl(f.url))}" target="_blank" rel="noopener" class="file-open">เปิด ↗</a>
+            </div>`).join("")}
+        </div>`;
+      }
     }
 
     const sideTitle = item.sideTitle || (type==="imgcaption" ? item.title : "");
@@ -2937,12 +2994,15 @@ function renderMediaItems(items, context, blockId){
          </div>`
       : bodyHtml;
 
+    const fitClass = (item.fit==="contain") ? " media-fit-contain" : "";
+    const orientUse = (type==="drivedoc") || (type==="file" && item.fileDisplay==="embed");
+    const orientClass = (orientUse && (item.orient==="portrait"||item.orient==="landscape")) ? ` drive-${item.orient}` : "";
     return `
-      <div class="media-item media-size-${size}${isAdmin?"":" view-mode"}">
+      <div class="media-item media-size-${size}${fitClass}${orientClass}${isAdmin?"":" view-mode"}">
         <div class="media-item-header">
           <span class="media-type-badge">${getMediaTypeLabel(type)}</span>
           ${item.label?`<span>${esc(item.label)}</span>`:""}
-          <div class="media-item-acts">${sizeSel}${editBtn}${dupBtn}${delBtn}</div>
+          <div class="media-item-acts">${sizeSel}${fitSel}${fileDispSel}${orientSel}${editBtn}${dupBtn}${delBtn}</div>
         </div>
         <div class="media-item-body">${bodyWrap}</div>
       </div>`;
@@ -2979,6 +3039,33 @@ async function updateMediaSize(context, blockId, idx, size){
     }
     showToast("ปรับขนาดแล้ว","ok");
   }catch(e){SW.err("ปรับขนาดไม่สำเร็จ",e.message);}
+}
+// อัปเดตคุณสมบัติย่อยของสื่อ (fit / orient) แบบรวดเร็วจากแถบหัว
+async function updateMediaField(context, blockId, idx, field, value){
+  try{
+    if(context==="indicator"){
+      const ind = allIndicators.find(i=>i.id===blockId);
+      if(!ind) return;
+      const items = [...(ind.mediaItems||[])];
+      if(!items[idx]) return;
+      items[idx] = {...items[idx], [field]:value};
+      await db.collection("indicators").doc(blockId).update({mediaItems:items});
+      ind.mediaItems = items; renderIndicators();
+    } else {
+      const c = _getMediaCollection(context); if(!c) return;
+      const items = [...(c.data.mediaItems||[])];
+      if(!items[idx]) return;
+      items[idx] = {...items[idx], [field]:value};
+      await c.ref.update({mediaItems:items});
+      c.data.mediaItems = items; c.render();
+    }
+    showToast("ปรับการแสดงผลแล้ว","ok");
+  }catch(e){SW.err("ปรับไม่สำเร็จ",e.message);}
+}
+// อ่านอาร์เรย์สื่อปัจจุบันตามบริบท (ใช้ตอนรักษาค่า fit/orient ระหว่างแก้ไขฟอร์ม)
+function _getMediaItemsArr(context){
+  if(context==="indicator"){ const ind=allIndicators.find(i=>i.id===currentEditBlockId); return ind?ind.mediaItems:null; }
+  const c=_getMediaCollection(context); return c?c.data.mediaItems:null;
 }
 async function duplicateMediaItem(context, blockId, idx){
   SW.loading("กำลังทำซ้ำ...");
@@ -4109,7 +4196,7 @@ function openMediaForm(type, ctx, existing){
         </label>
       </div>
       <div id="mf_fileList" style="margin:8px 0"></div>
-      <div class="field-note">อัปโหลดไฟล์ให้เสร็จก่อน แล้วกด "บันทึกไฟล์" เพื่อให้แสดงบนหน้าเว็บ</div>
+      <div class="field-note">อัปโหลดไฟล์ให้เสร็จก่อน แล้วกด "บันทึกไฟล์" เพื่อให้แสดงบนหน้าเว็บ<br>💡 บันทึกแล้วเลือกที่แถบหัวบล็อกได้ว่าจะแสดงเป็น <b>รายการดาวน์โหลด</b> หรือ <b>พรีวิวฝังในหน้า</b> (เอกสาร เช่น PDF/Word พร้อมเลือกแนว A4 ตั้ง/นอน)</div>
       <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="saveMediaItem('file','${context}')">💾 บันทึกไฟล์</button>`;
   }
   // ตัวเลือกขนาดสัดส่วนการแสดงผล (ใช้ได้กับสื่อทุกชนิด)
@@ -4446,6 +4533,15 @@ async function saveMediaItem(type, context){
   item.size = sizeVal;
   item.sideTitle = (($("mf_sideTitle")||{}).value||"").trim();
   item.sideText  = (($("mf_sideText")||{}).value||"").trim();
+  // รักษาค่า fit/orient ที่ตั้งจากแถบหัว ไม่ให้หายเมื่อบันทึกผ่านฟอร์มแก้ไข
+  if(currentEditMediaIdx!=null){
+    const prev = (_getMediaItemsArr(context)||[])[currentEditMediaIdx];
+    if(prev){
+      if(prev.fit!=null && item.fit==null) item.fit = prev.fit;
+      if(prev.orient!=null && item.orient==null) item.orient = prev.orient;
+      if(prev.fileDisplay!=null && item.fileDisplay==null) item.fileDisplay = prev.fileDisplay;
+    }
+  }
 
   SW.loading("กำลังบันทึก...");
   // ฟังก์ชันรวม: ถ้าเป็นโหมดแก้ไข → แทนที่ที่ตำแหน่งเดิม, ไม่งั้น → ต่อท้าย
