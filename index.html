@@ -534,14 +534,14 @@ ul{list-style:none}
 .media-item.view-mode .media-item-header{display:none}
 .media-item.view-mode .media-item-body{padding:0}
 .media-item-header{
-  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  display:flex;align-items:center;gap:10px;padding:10px 14px;flex-wrap:wrap;row-gap:8px;
   background:var(--surface-2);border-bottom:1px solid var(--line);font-size:.82rem;font-weight:600;color:var(--text-2);
 }
 .media-type-badge{
-  padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:700;
+  padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:700;flex-shrink:0;
   background:var(--accent-soft);color:var(--accent);border:1px solid var(--line-2);
 }
-.media-item-acts{display:flex;gap:5px;margin-left:auto}
+.media-item-acts{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
 .media-item-acts button{padding:4px 10px;border-radius:6px;font-size:.76rem;font-weight:600;transition:.2s}
 .btn-del-media{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.2)}
 .btn-del-media:hover{background:#dc2626;color:#fff}
@@ -1684,6 +1684,13 @@ a:has(.ic-img-linked){display:block}
             <div class="field-note">ID ของโฟลเดอร์ปลายทางใน Google Drive (จาก URL: drive.google.com/drive/folders/<strong>ID ตรงนี้</strong>)</div>
           </div>
           <button class="btn btn-primary" id="saveSettingsBtn">💾 บันทึกการตั้งค่า</button>
+          <div class="divider"></div>
+          <div class="section-head-label">📖 ส่งออกเป็นเล่มรายงาน</div>
+          <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:12px;line-height:1.7">
+            รวบรวมข้อมูลทุกส่วน (ประวัติ/ภาระงาน, ส่วนที่ 1–3) มาเรียบเรียงเป็นเอกสารรูปแบบวิชาการไทย
+            พร้อมหน้าปกและสารบัญหัวข้อ แล้วดาวน์โหลดเป็นไฟล์ <strong>.docx</strong> (เปิด/แก้ไขต่อใน Word ได้)
+          </p>
+          <button class="btn btn-primary" id="exportReportBtn" style="background:linear-gradient(135deg,#1a1008,#5a4020)">📖 ส่งออกเป็นเล่มรายงาน (.docx)</button>
         </div>
 
         <!-- Pane: Indicators -->
@@ -3616,6 +3623,228 @@ $("saveSettingsBtn").onclick = async()=>{
 };
 
 // ============================================================
+// 📖 ส่งออกเป็นเล่มรายงาน (.docx) — รูปแบบวิชาการไทย
+// ============================================================
+function _loadScript(src, globalName){
+  return new Promise((res,rej)=>{
+    if(window[globalName]) return res();
+    const sc = document.createElement("script");
+    sc.src = src;
+    sc.onload = ()=> window[globalName] ? res() : rej(new Error("โหลดไลบรารีไม่สมบูรณ์: "+globalName));
+    sc.onerror = ()=> rej(new Error("โหลดไลบรารีไม่สำเร็จ ("+globalName+") — ตรวจการเชื่อมต่ออินเทอร์เน็ต"));
+    document.head.appendChild(sc);
+  });
+}
+async function ensureReportLibs(){
+  await _loadScript("https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js","docx");
+  await _loadScript("https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js","QRCode");
+}
+const DIM_NAMES = {
+  1:"ด้านที่ 1 ด้านการจัดการเรียนรู้",
+  2:"ด้านที่ 2 ด้านการส่งเสริมและสนับสนุนการจัดการเรียนรู้",
+  3:"ด้านที่ 3 ด้านการพัฒนาตนเองและวิชาชีพ"
+};
+// อ่านขนาดจริงของรูปจาก blob
+function _imgDims(blob){
+  return new Promise(res=>{
+    const u=URL.createObjectURL(blob); const im=new Image();
+    im.onload=()=>{res({w:im.naturalWidth||800,h:im.naturalHeight||600});URL.revokeObjectURL(u);};
+    im.onerror=()=>{res({w:800,h:600});URL.revokeObjectURL(u);};
+    im.src=u;
+  });
+}
+// ดึงไบต์รูปจาก Drive (ลองหลาย endpoint เผื่อ CORS) → คืน null ถ้าล้มเหลว
+async function _fetchImageBytes(rawUrl){
+  if(!rawUrl) return null;
+  const id = extractDriveId(rawUrl);
+  const candidates = id
+    ? [`https://lh3.googleusercontent.com/d/${id}=w1200`, `https://drive.google.com/thumbnail?id=${id}&sz=w1200`]
+    : [rawUrl];
+  for(const u of candidates){
+    try{
+      const res = await fetch(u, {mode:"cors"});
+      if(!res.ok) continue;
+      const blob = await res.blob();
+      if(!/^image\//.test(blob.type||"")) continue;
+      const buf = await blob.arrayBuffer();
+      const dim = await _imgDims(blob);
+      const type = /png/.test(blob.type)?"png":/gif/.test(blob.type)?"gif":/bmp/.test(blob.type)?"bmp":"jpg";
+      return {data:new Uint8Array(buf), width:dim.w, height:dim.h, type};
+    }catch(e){/* ลองตัวถัดไป */}
+  }
+  return null;
+}
+// สร้าง QR code (PNG bytes) จากข้อความ/ลิงก์
+async function _qrBytes(text){
+  try{
+    const dataUrl = await window.QRCode.toDataURL(String(text||""), {margin:1, width:300, errorCorrectionLevel:"M"});
+    const bin = atob(dataUrl.split(",")[1]);
+    const arr = new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+    return arr;
+  }catch(e){ return null; }
+}
+async function exportReportDocx(){
+  try{
+    SW.loading("กำลังสร้างเล่มรายงาน (ฝังรูป/สร้าง QR)...");
+    await ensureReportLibs();
+    const D = window.docx;
+    const { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, PageBreak, Footer, PageNumber, HeadingLevel } = D;
+    const s = siteSettings;
+    const FONT = "TH Sarabun New";
+    const run  = (text,opt={})=> new TextRun({text:String(text==null?"":text), font:FONT, size:32, ...opt});
+    const center = (text,opt={})=> new Paragraph({alignment:AlignmentType.CENTER, spacing:{after:120,...(opt.spacing||{})}, children:[run(text,opt.run||{})]});
+    const heading = (text,lvl)=> new Paragraph({
+      heading: lvl===1?HeadingLevel.HEADING_1:(lvl===2?HeadingLevel.HEADING_2:HeadingLevel.HEADING_3),
+      spacing:{before:lvl===1?320:220, after:120},
+      children:[run(text,{bold:true, size:lvl===1?40:(lvl===2?36:32)})]
+    });
+    const fitDims = (w,h,maxW)=>{ maxW=maxW||440; if(!w||!h) return {w:maxW,h:Math.round(maxW*0.66)}; if(w<=maxW) return {w,h}; const r=maxW/w; return {w:Math.round(w*r), h:Math.round(h*r)}; };
+    // ย่อหน้ารูปที่ฝังจริง
+    const imgPara = (img, maxW)=>{
+      const d = fitDims(img.width, img.height, maxW);
+      return new Paragraph({alignment:AlignmentType.CENTER, spacing:{before:60,after:60}, children:[ new ImageRun({data:img.data, type:img.type, transformation:{width:d.w, height:d.h}}) ]});
+    };
+    // ย่อหน้า QR + คำอธิบายลิงก์ใต้ภาพ
+    const qrPara = (qr, label)=> new Paragraph({alignment:AlignmentType.CENTER, spacing:{before:40,after:100}, children:[
+      new ImageRun({data:qr, type:"png", transformation:{width:120,height:120}}),
+      new TextRun({break:1, text:"สแกนเพื่อเปิด: "+label, font:FONT, size:24, color:"555555"})
+    ]});
+    const linkLine = (label)=> new Paragraph({children:[run(label,{italics:true,size:28,color:"777777"})], bullet:{level:0}, spacing:{after:30}});
+    // แปลงข้อความ rich (หลายบรรทัด/bullet) → ย่อหน้า docx
+    const richToParas = (text)=>{
+      const out=[]; const bulletRe=/^([-•*]|\d+[.)])\s+/;
+      String(text||"").replace(/\r/g,"").split("\n").forEach(line=>{
+        const t=line.trim(); if(!t) return;
+        if(bulletRe.test(t)){
+          out.push(new Paragraph({children:[run(t.replace(bulletRe,""))], bullet:{level:0}, spacing:{after:60}}));
+        } else if(t.length<=46 && /[:：]$/.test(t)){
+          out.push(new Paragraph({children:[run(t.replace(/[:：]$/,""),{bold:true})], spacing:{before:80,after:60}}));
+        } else {
+          out.push(new Paragraph({children:[run(t)], spacing:{after:80}, indent:{firstLine:567}}));
+        }
+      });
+      return out;
+    };
+    const TYPE_LABEL = {image:"ภาพประกอบ",carousel:"ภาพชุด",video:"วิดีโอ",drivedoc:"เอกสารแนบ",file:"ไฟล์แนบ",linkcard:"ลิงก์",syscard:"ระบบ/ลิงก์",imgcaption:"ภาพประกอบคำบรรยาย"};
+    // สื่อ/หลักฐานประกอบ → ฝังรูปจริง + QR สำหรับลิงก์ (async)
+    const mediaToParas = async (items)=>{
+      const arr=(items||[]).filter(Boolean); if(!arr.length) return [];
+      const out=[ new Paragraph({children:[run("หลักฐาน/ร่องรอยประกอบ:",{bold:true})], spacing:{before:120,after:60}}) ];
+      for(const it of arr){
+        const cap = it.caption||it.title||it.coverTitle||"";
+        // ป้ายกำกับ
+        if(cap || it.description){
+          const kids=[run(`[${TYPE_LABEL[it.type]||"สื่อ"}] `,{bold:true})];
+          if(cap) kids.push(run(cap));
+          if(it.description) kids.push(run((cap?" — ":"")+it.description));
+          out.push(new Paragraph({children:kids, spacing:{after:40}}));
+        }
+        // จำแนกรูปที่จะฝัง / ลิงก์ที่จะทำ QR
+        const imageUrls=[], linkUrls=[];
+        if(it.type==="image"){ if(it.url) imageUrls.push(it.url); if(it.imgLink) linkUrls.push(it.imgLink); }
+        else if(it.type==="carousel"){ (it.images||[]).slice(0,8).forEach(u=>u&&imageUrls.push(u)); }
+        else if(it.type==="imgcaption"){
+          const mt=it.mediaType||"image";
+          if(mt==="image" && it.url) imageUrls.push(it.url);
+          else if(mt==="carousel") (it.images||[]).slice(0,8).forEach(u=>u&&imageUrls.push(u));
+          else if(it.url) linkUrls.push(it.url);
+          if(it.imgLink) linkUrls.push(it.imgLink);
+        }
+        else if(it.type==="syscard"){ if(it.coverImage) imageUrls.push(it.coverImage); if(it.link) linkUrls.push(it.link); }
+        else if(it.type==="video"||it.type==="drivedoc"||it.type==="linkcard"){ if(it.url) linkUrls.push(it.url); }
+        else if(it.type==="file"){ (it.files||[]).forEach(f=>{ if(f&&f.url) linkUrls.push(f.url); }); }
+        // ฝังรูปจริง (ถ้าดึงไม่ได้ → QR ของลิงก์ดูภาพ)
+        for(const u of imageUrls){
+          const img = await _fetchImageBytes(u);
+          if(img){ out.push(imgPara(img, 440)); }
+          else { const q=await _qrBytes(driveViewUrl(u)); out.push(q?qrPara(q, driveViewUrl(u)):linkLine(driveViewUrl(u))); }
+        }
+        // QR สำหรับลิงก์
+        for(const u of linkUrls){
+          const q=await _qrBytes(u);
+          out.push(q?qrPara(q,u):linkLine(u));
+        }
+      }
+      return out;
+    };
+
+    const body = [];
+    // ---------- หน้าปก ----------
+    body.push(new Paragraph({spacing:{before:1600,after:120}, alignment:AlignmentType.CENTER, children:[run("รายงานผลการปฏิบัติงาน",{bold:true,size:56})]}));
+    body.push(center("เพื่อประกอบการประเมินเพื่อคงวิทยฐานะ",{run:{bold:true,size:40}}));
+    body.push(center(" "));body.push(center(" "));body.push(center(" "));
+    body.push(center(s.name||"",{run:{bold:true,size:36}}));
+    body.push(center("ตำแหน่ง "+(s.position||"ครู")+(s.academic?(" วิทยฐานะ"+s.academic):""),{run:{size:32}}));
+    body.push(center(s.school||"",{run:{size:32}}));
+    if(s.year) body.push(center("ปีการศึกษา "+s.year,{run:{size:32}}));
+    body.push(new Paragraph({children:[new PageBreak()]}));
+
+    // ---------- สารบัญหัวข้อ ----------
+    body.push(heading("สารบัญ",1));
+    ["ส่วนที่ 1 ผลการปฏิบัติงานตามมาตรฐานตำแหน่ง","ส่วนที่ 2 ประเด็นท้าทาย","ส่วนที่ 3 การจัดการเรียนรู้ (คลิปการสอน)","ภาคผนวก: ประวัติและภาระงานที่ ก.จ. กำหนด"]
+      .forEach(t=> body.push(new Paragraph({children:[run(t)], spacing:{after:60}, bullet:{level:0}})));
+    body.push(new Paragraph({children:[new PageBreak()]}));
+
+    // ---------- ส่วนที่ 1 ----------
+    body.push(heading("ส่วนที่ 1 ผลการปฏิบัติงานตามมาตรฐานตำแหน่ง",1));
+    const sorted = [...allIndicators].sort((a,b)=> (a.dim-b.dim)||(a.order-b.order));
+    for(const dim of [1,2,3]){
+      const inds = sorted.filter(i=>i.dim===dim);
+      if(!inds.length) continue;
+      body.push(heading(DIM_NAMES[dim]||("ด้านที่ "+dim),2));
+      for(const ind of inds){
+        body.push(heading(`ตัวชี้วัดที่ ${ind.order||""} ${ind.title||""}`.trim(),3));
+        if(ind.desc) richToParas(ind.desc).forEach(p=>body.push(p));
+        else body.push(new Paragraph({children:[run("(ยังไม่มีคำบรรยายผลการปฏิบัติงาน)",{italics:true,color:"999999"})], spacing:{after:60}}));
+        (await mediaToParas(ind.mediaItems)).forEach(p=>body.push(p));
+      }
+    }
+    if(!sorted.length) body.push(new Paragraph({children:[run("(ยังไม่มีข้อมูลตัวชี้วัด)",{italics:true})]}));
+    body.push(new Paragraph({children:[new PageBreak()]}));
+
+    // ---------- ส่วนที่ 2 ----------
+    body.push(heading("ส่วนที่ 2 ประเด็นท้าทาย",1));
+    if(challengeData.title) body.push(heading(challengeData.title,3));
+    if(challengeData.desc) richToParas(challengeData.desc).forEach(p=>body.push(p));
+    (await mediaToParas(challengeData.mediaItems)).forEach(p=>body.push(p));
+    body.push(new Paragraph({children:[new PageBreak()]}));
+
+    // ---------- ส่วนที่ 3 ----------
+    body.push(heading("ส่วนที่ 3 การจัดการเรียนรู้ (คลิปการสอน)",1));
+    if(clipsData.title) body.push(heading(clipsData.title,3));
+    if(clipsData.desc) richToParas(clipsData.desc).forEach(p=>body.push(p));
+    (await mediaToParas(clipsData.mediaItems)).forEach(p=>body.push(p));
+    body.push(new Paragraph({children:[new PageBreak()]}));
+
+    // ---------- ภาคผนวก: ประวัติและภาระงาน ----------
+    body.push(heading("ภาคผนวก: ประวัติและภาระงานที่ ก.จ. กำหนด",1));
+    body.push(heading("ข้อมูลส่วนตัว",2));
+    richToParas(historyData.personal).forEach(p=>body.push(p));
+    body.push(heading("ภาระงานที่ ก.จ. กำหนด",2));
+    richToParas(historyData.body).forEach(p=>body.push(p));
+
+    const doc = new Document({
+      styles:{ default:{ document:{ run:{ font:FONT, size:32 } } } },
+      sections:[{
+        properties:{ page:{ size:{ width:11906, height:16838 }, margin:{ top:1417, bottom:1417, left:1701, right:1134 } } },
+        footers:{ default: new Footer({children:[ new Paragraph({alignment:AlignmentType.CENTER, children:[ new TextRun({children:[PageNumber.CURRENT], font:FONT, size:28}) ]}) ]}) },
+        children: body
+      }]
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const fname = `รายงานผลการปฏิบัติงาน_${(s.name||"").replace(/\s+/g,"")||"PA"}.docx`;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = fname;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+    Swal.close(); SW.ok("สร้างเล่มรายงานแล้ว 📖");
+  }catch(e){ Swal.close(); SW.err("ส่งออกไม่สำเร็จ", e.message); }
+}
+$("exportReportBtn").onclick = exportReportDocx;
+
+// ============================================================
 // WELCOME ANIMATION — Typewriter + Vertical Ticker
 // ============================================================
 let typewriterTimer = null;
@@ -4683,7 +4912,24 @@ async function deleteDriveFiles(fileIds){
 // ============================================================
 // DRIVE UPLOAD — no-cors + key + poll (ตาม GAS ที่ project ใช้อยู่)
 // ============================================================
-async function uploadToDrive(fileOrBlob, onProgress){
+// สร้างคำนำหน้าชื่อไฟล์ตามบริบทที่กำลังอัปโหลด: ชื่อส่วน + ตัวชี้วัด
+function uploadNamePrefix(){
+  const clean = v => String(v||"").replace(/[\\\/:*?"<>|]+/g," ").replace(/\s+/g," ").trim();
+  const ctx = currentEditContext;
+  if(ctx==="indicator"){
+    const ind = allIndicators.find(i=>i.id===currentEditBlockId);
+    if(ind){
+      const t = clean(ind.title).slice(0,50);
+      return clean(`ส่วนที่1 ตชว.${ind.order||""} ${t}`) + "_";
+    }
+    return "ส่วนที่1_";
+  }
+  if(ctx==="challenge") return "ส่วนที่2 ประเด็นท้าทาย_";
+  if(ctx==="clips")     return "ส่วนที่3 คลิปการสอน_";
+  if(ctx==="history")   return "ประวัติและภาระงาน_";
+  return "";
+}
+async function uploadToDrive(fileOrBlob, onProgress, namePrefix){
   const prog = typeof onProgress==="function" ? onProgress : ()=>{};
   // ถ้ายังไม่ได้ตั้งค่า GAS → แจ้ง error ชัดเจนพร้อมชี้ไปที่ Settings
   if(!DRIVE_UPLOAD_ENDPOINT){
@@ -4710,7 +4956,7 @@ async function uploadToDrive(fileOrBlob, onProgress){
   const key = (window.crypto&&crypto.randomUUID)
     ? crypto.randomUUID()
     : `${Date.now()}_${Math.random().toString(36).slice(2)}`;
-  const fileName = fileOrBlob.name||`upload_${Date.now()}`;
+  const fileName = ((namePrefix!=null)?namePrefix:uploadNamePrefix()) + (fileOrBlob.name||`upload_${Date.now()}`);
   const mimeType = fileOrBlob.type||"application/octet-stream";
   const payload = JSON.stringify({key, filename:fileName, mimeType, data:b64, folderId:DRIVE_FOLDER_ID});
 
