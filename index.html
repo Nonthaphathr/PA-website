@@ -1803,6 +1803,34 @@ a:has(.ic-img-linked){display:block}
             </select>
             <div class="field-note">โหมด "เปิดใช้งาน" จดจำการเข้าชมต่อเครื่อง/เบราว์เซอร์ผ่าน localStorage</div>
           </div>
+          <div class="divider"></div>
+          <div class="section-head-label">🔤 ฟอนต์แสดงผล (อัปโหลดฟอนต์เอง)</div>
+          <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:12px;line-height:1.7">
+            อัปโหลดไฟล์ฟอนต์เพื่อเปลี่ยนตัวอักษร <strong>หัวเรื่อง</strong> และ <strong>เนื้อหา</strong> ของทั้งเว็บไซต์
+            รองรับ <strong>.woff2 / .woff / .ttf / .otf</strong> — แนะนำ <strong>.woff2</strong> เพราะไฟล์เล็กที่สุด (ไม่ควรเกิน ~700KB ต่อไฟล์)
+          </p>
+          <div class="field">
+            <label>ฟอนต์หัวเรื่อง (Heading)</label>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer">📤 เลือกไฟล์ฟอนต์
+                <input type="file" id="fontHeadInput" accept=".woff2,.woff,.ttf,.otf,font/*" hidden onchange="handleFontUpload(event,'head')"/>
+              </label>
+              <span id="fontHeadName" style="font-size:.85rem;color:var(--text-2)">— ใช้ค่าเริ่มต้น (Kanit)</span>
+              <button type="button" class="btn btn-xs btn-del-media" id="fontHeadReset" style="display:none" onclick="resetCustomFont('head')">↺ คืนค่าเริ่มต้น</button>
+            </div>
+            <div style="font-family:var(--font-head);font-size:1.3rem;font-weight:800;margin-top:8px;color:var(--text)">ก ข ค Abc 123 — ตัวอย่างหัวเรื่อง</div>
+          </div>
+          <div class="field">
+            <label>ฟอนต์เนื้อหา (Body)</label>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer">📤 เลือกไฟล์ฟอนต์
+                <input type="file" id="fontBodyInput" accept=".woff2,.woff,.ttf,.otf,font/*" hidden onchange="handleFontUpload(event,'body')"/>
+              </label>
+              <span id="fontBodyName" style="font-size:.85rem;color:var(--text-2)">— ใช้ค่าเริ่มต้น (Sarabun)</span>
+              <button type="button" class="btn btn-xs btn-del-media" id="fontBodyReset" style="display:none" onclick="resetCustomFont('body')">↺ คืนค่าเริ่มต้น</button>
+            </div>
+            <div style="font-family:var(--font-body);font-size:1rem;margin-top:8px;color:var(--text-2)">ก ข ค Abc 123 — ตัวอย่างเนื้อหา ทดสอบการอ่านข้อความยาว ๆ</div>
+          </div>
           <div class="section-head-label">👥 คณะกรรมการผู้ประเมิน (แสดงใต้ Hero — 3 คน)</div>
           <div class="field"><label>ข้อความต้อนรับคณะกรรมการ (Fade-in)</label><input id="s_committeeWelcome" placeholder="ยินดีต้อนรับคณะกรรมการ"/></div>
           <div class="field"><label>คำบรรยายใต้หัวข้อ</label><input id="s_committeeSub" placeholder="คณะกรรมการประเมินเพื่อคงวิทยฐานะ"/></div>
@@ -2530,6 +2558,7 @@ async function loadAllData(){
       Object.assign(siteSettings, settingsSnap.data());
       applySiteSettings();
     }
+    loadCustomFonts();   // โหลดฟอนต์ที่อัปโหลดไว้ (ไม่ block การเรนเดอร์)
     // โหลด indicators — ใช้ get() ธรรมดา ไม่มี orderBy เพื่อหลีกเลี่ยง composite index error
     const indSnap = await db.collection("indicators").get();
     if(indSnap.empty){
@@ -2579,6 +2608,102 @@ async function seedDefaultIndicators(){
 // ============================================================
 // APPLY SETTINGS — อัปเดต UI ตาม settings
 // ============================================================
+// ============================================================
+// 🔤 CUSTOM FONTS — อัปโหลดฟอนต์ฝัง base64 ผ่าน @font-face
+// เก็บแยก doc ละฟอนต์ (fonts/head, fonts/body) เพื่อให้แต่ละฟอนต์มีพื้นที่ ~1MB เต็ม
+// ============================================================
+let customFontHead = null;   // {dataUrl, format, name}
+let customFontBody = null;
+const FONT_FMT = { woff2:"woff2", woff:"woff", ttf:"truetype", otf:"opentype" };
+
+// สร้าง/อัปเดต <style> ที่ประกาศ @font-face + override ตัวแปร --font-head/--font-body
+function applyCustomFonts(){
+  let css = "";
+  if(customFontHead && customFontHead.dataUrl){
+    css += `@font-face{font-family:"PA-CustomHead";src:url(${customFontHead.dataUrl}) format("${customFontHead.format||"woff2"}");font-display:swap}\n`;
+  }
+  if(customFontBody && customFontBody.dataUrl){
+    css += `@font-face{font-family:"PA-CustomBody";src:url(${customFontBody.dataUrl}) format("${customFontBody.format||"woff2"}");font-display:swap}\n`;
+  }
+  let rootOverride = ":root{";
+  if(customFontHead && customFontHead.dataUrl) rootOverride += `--font-head:"PA-CustomHead","Kanit",sans-serif;`;
+  if(customFontBody && customFontBody.dataUrl) rootOverride += `--font-body:"PA-CustomBody","Sarabun",sans-serif;`;
+  rootOverride += "}";
+  css += rootOverride;
+
+  let el = document.getElementById("customFontStyle");
+  if(!el){ el = document.createElement("style"); el.id = "customFontStyle"; document.head.appendChild(el); }
+  el.textContent = css;
+}
+
+// อัปเดตป้ายชื่อ + ปุ่มคืนค่าในหน้าตั้งค่าให้ตรงกับสถานะปัจจุบัน
+function refreshFontSettingUI(){
+  const map = [["head", customFontHead, "Kanit"], ["body", customFontBody, "Sarabun"]];
+  map.forEach(([which, font, def])=>{
+    const nameEl = $("font"+(which==="head"?"Head":"Body")+"Name");
+    const resetBtn = $("font"+(which==="head"?"Head":"Body")+"Reset");
+    if(!nameEl) return;
+    if(font && font.name){ nameEl.textContent = "✓ " + font.name; nameEl.style.color = "var(--accent)"; if(resetBtn) resetBtn.style.display = ""; }
+    else { nameEl.textContent = "— ใช้ค่าเริ่มต้น ("+def+")"; nameEl.style.color = "var(--text-2)"; if(resetBtn) resetBtn.style.display = "none"; }
+  });
+}
+
+// อัปโหลดฟอนต์: อ่านเป็น base64 data URL → บันทึก Firestore → apply ทันที
+async function handleFontUpload(event, which){
+  const file = event.target.files && event.target.files[0];
+  event.target.value = "";   // เคลียร์เพื่อให้เลือกไฟล์เดิมซ้ำได้
+  if(!file) return;
+  const ext = (file.name.split(".").pop()||"").toLowerCase();
+  if(!FONT_FMT[ext]) return SW.err("ชนิดไฟล์ไม่รองรับ","รองรับเฉพาะ .woff2 / .woff / .ttf / .otf");
+  if(file.size > 700*1024){
+    return SW.err("ไฟล์ใหญ่เกินไป (เกิน 700KB)","กรุณาแปลงฟอนต์เป็น .woff2 ก่อน (ไฟล์เล็กกว่ามาก) — แนะนำเว็บแปลงฟอนต์ออนไลน์ เช่น cloudconvert / transfonter");
+  }
+  try{
+    SW.loading("กำลังประมวลผลฟอนต์...");
+    const dataUrl = await new Promise((res,rej)=>{
+      const r = new FileReader();
+      r.onload = ()=>res(r.result);
+      r.onerror = ()=>rej(new Error("อ่านไฟล์ไม่สำเร็จ"));
+      r.readAsDataURL(file);
+    });
+    const font = { dataUrl, format: FONT_FMT[ext], name: file.name };
+    const docId = (which==="head") ? "head" : "body";
+    await db.collection("fonts").doc(docId).set(font);
+    if(which==="head") customFontHead = font; else customFontBody = font;
+    applyCustomFonts();
+    refreshFontSettingUI();
+    Swal.close(); SW.ok("เปลี่ยนฟอนต์"+(which==="head"?"หัวเรื่อง":"เนื้อหา")+"แล้ว ✓");
+  }catch(e){ Swal.close(); SW.err("อัปโหลดฟอนต์ไม่สำเร็จ", e.message); }
+}
+
+// คืนค่าฟอนต์เริ่มต้น (ลบฟอนต์ที่อัปโหลด)
+async function resetCustomFont(which){
+  const ok = await SW.confirm("คืนค่าฟอนต์เริ่มต้น?", which==="head"?"หัวเรื่องจะกลับไปใช้ Kanit":"เนื้อหาจะกลับไปใช้ Sarabun");
+  if(!ok) return;
+  try{
+    SW.loading("กำลังคืนค่า...");
+    const docId = (which==="head") ? "head" : "body";
+    await db.collection("fonts").doc(docId).delete();
+    if(which==="head") customFontHead = null; else customFontBody = null;
+    applyCustomFonts();
+    refreshFontSettingUI();
+    Swal.close(); SW.ok("คืนค่าฟอนต์เริ่มต้นแล้ว");
+  }catch(e){ Swal.close(); SW.err("คืนค่าไม่สำเร็จ", e.message); }
+}
+
+// โหลดฟอนต์ที่บันทึกไว้จาก Firestore (เรียกตอนเริ่มต้น)
+async function loadCustomFonts(){
+  try{
+    const [h,b] = await Promise.all([
+      db.collection("fonts").doc("head").get(),
+      db.collection("fonts").doc("body").get()
+    ]);
+    customFontHead = h.exists ? h.data() : null;
+    customFontBody = b.exists ? b.data() : null;
+    applyCustomFonts();
+  }catch(e){ console.warn("loadCustomFonts:", e.message); }
+}
+
 function applySiteSettings(){
   const s = siteSettings;
   // อัปเดต Drive config จาก settings
@@ -3927,6 +4052,7 @@ function showSettingsBody(){
   $("s_pin").value = siteSettings.pin||"";
   $("s_blockLinks").checked = !!siteSettings.blockLinks;
   $("s_tourMode").value = siteSettings.tourMode || "off";
+  refreshFontSettingUI();   // อัปเดตป้ายชื่อฟอนต์ + ปุ่มคืนค่าให้ตรงกับสถานะปัจจุบัน
   $("s_welcomeText").value = siteSettings.welcomeText||"ยินดีต้อนรับคณะกรรมการผู้ประเมิน";
   $("s_committeeWelcome").value = siteSettings.committeeWelcome||"ยินดีต้อนรับคณะกรรมการ";
   $("s_committeeSub").value = siteSettings.committeeSub||"";
