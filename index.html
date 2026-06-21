@@ -1360,7 +1360,6 @@ a:has(.ic-img-linked){display:block}
   .hero-logo-badge{width:52px;height:52px;right:4px;bottom:8px}
   .hp-ph{font-size:4rem}
   .modal{max-width:calc(100vw - 16px)}
-  .welcome-ticker{display:none}     /* แอนิเมชันข้อความวิ่งแนวตั้งเป็นองค์ประกอบตกแต่งเสริม — ซ่อนบนจอแคบเพื่อไม่ให้ทับเนื้อหา */
 }
 @media(max-width:480px){
   .add-media-row{flex-direction:column}
@@ -1412,6 +1411,11 @@ a:has(.ic-img-linked){display:block}
 .ticker-line{
   width:1px;background:linear-gradient(to bottom,transparent,var(--accent),transparent);
   height:60px;opacity:.3;
+}
+/* แอนิเมชันข้อความวิ่งแนวตั้งเป็นองค์ประกอบตกแต่งเสริม — ซ่อนบนจอแคบเพื่อไม่ให้ทับเนื้อหา
+   (ใส่กฎนี้ไว้หลังกฎหลักของ .welcome-ticker เสมอ เพื่อให้ source order ชนะ ไม่ถูก display:flex ทับ) */
+@media(max-width:768px){
+  .welcome-ticker{display:none!important}
 }
 
 /* ============================================================
