@@ -1331,7 +1331,9 @@ a:has(.ic-img-linked){display:block}
 #tourPopover[data-arrow="left"]::before{left:-7px;top:24px}
 #tourPopover[data-arrow="right"]::before{right:-7px;top:24px}
 @media(max-width:640px){
-  #tourPopover{max-width:88vw;left:6vw!important}
+  #tourPopover{max-width:88vw}
+  #tourPopover:not(.tour-modal-intro){left:6vw!important; width:88vw}
+  #tourPopover.tour-modal-intro{width:88vw;max-width:88vw}
   #tourRing{display:none}     /* บนจอแคบ ใช้กล่องคำอธิบายลอยกึ่งกลางแทน เพื่อไม่บังเนื้อหา */
 }
 
@@ -1358,6 +1360,7 @@ a:has(.ic-img-linked){display:block}
   .hero-logo-badge{width:52px;height:52px;right:4px;bottom:8px}
   .hp-ph{font-size:4rem}
   .modal{max-width:calc(100vw - 16px)}
+  .welcome-ticker{display:none}     /* แอนิเมชันข้อความวิ่งแนวตั้งเป็นองค์ประกอบตกแต่งเสริม — ซ่อนบนจอแคบเพื่อไม่ให้ทับเนื้อหา */
 }
 @media(max-width:480px){
   .add-media-row{flex-direction:column}
