@@ -738,6 +738,8 @@ body.admin-mode #fabExit{display:flex}
 .modal-tab:hover{color:var(--accent)}
 .modal-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 .modal-pane{display:none}
+.settings-group{background:var(--accent-soft,rgba(0,0,0,.02));border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;margin-bottom:18px}
+.settings-group>.section-head-label:first-child{margin-top:0}
 .modal-pane.active{display:block}
 
 /* PIN Gate */
@@ -1743,122 +1745,168 @@ a:has(.ic-img-linked){display:block}
     <!-- Settings Body (hidden until PIN) -->
     <div id="settingsBody" style="display:none;display:none;flex-direction:column;overflow:hidden">
       <div class="modal-tabs" id="settingsTabs">
-        <button class="modal-tab active" data-pane="general">ทั่วไป</button>
-        <button class="modal-tab" data-pane="indicators">จัดการตัวชี้วัด</button>
-        <button class="modal-tab" data-pane="import-export">Import/Export</button>
-        <button class="modal-tab" data-pane="danger">ล้างข้อมูล</button>
+        <button class="modal-tab active" data-pane="general">📝 ข้อมูลทั่วไป</button>
+        <button class="modal-tab" data-pane="committee">👥 คณะกรรมการ</button>
+        <button class="modal-tab" data-pane="appearance">🎨 รูปลักษณ์ &amp; ทัวร์</button>
+        <button class="modal-tab" data-pane="connect">☁️ อัปโหลด &amp; รายงาน</button>
+        <button class="modal-tab" data-pane="indicators">📋 จัดการตัวชี้วัด</button>
+        <button class="modal-tab" data-pane="import-export">💾 นำเข้า/ส่งออก</button>
+        <button class="modal-tab" data-pane="danger">⚠️ ล้างข้อมูล</button>
       </div>
       <div class="modal-body">
-        <!-- Pane: General -->
+        <!-- Pane: ข้อมูลทั่วไป (ข้อมูลพื้นฐาน + รูปภาพ + PIN) -->
         <div class="modal-pane active" data-pane="general">
-          <div class="field-row">
-            <div class="field"><label>ชื่อ-สกุล ผู้รับการประเมิน</label><input id="s_name" value="นายนนทพัทธ์ หิรัญเรือง"/></div>
-            <div class="field"><label>ตำแหน่ง</label><input id="s_position" value="ครู"/></div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label>วิทยฐานะ</label><input id="s_academic" value="ชำนาญการ"/></div>
-            <div class="field"><label>ปีงบประมาณ</label><input id="s_year" placeholder="เช่น 2568"/></div>
-          </div>
-          <div class="field"><label>ชื่อสถานศึกษา</label><input id="s_school" value="โรงเรียนกระดุมทองวิทยา"/></div>
-          <div class="field">
-            <label>ข้อความต้อนรับ (แสดงใน Hero + แถบเลื่อนขวา)</label>
-            <input id="s_welcomeText" placeholder="ยินดีต้อนรับคณะกรรมการผู้ประเมิน" value="ยินดีต้อนรับคณะกรรมการผู้ประเมิน"/>
-          </div>
-          <div class="field"><label>ภาพผู้ประเมิน / รูปบุคคล (แสดงเด่นใน Hero)</label>
-            <div class="field-with-btn">
-              <input id="s_portraitUrl" placeholder="https://... หรือกดอัปโหลด"/>
-              <button type="button" class="btn btn-ghost btn-sm" onclick="pickCropTo(u=>{$('s_portraitUrl').value=u;},'1/1')">📤 อัปโหลด/ครอป</button>
+          <div class="settings-group">
+            <div class="section-head-label">🪪 ข้อมูลผู้รับการประเมิน</div>
+            <div class="field-row">
+              <div class="field"><label>ชื่อ-สกุล ผู้รับการประเมิน</label><input id="s_name" value="นายนนทพัทธ์ หิรัญเรือง"/></div>
+              <div class="field"><label>ตำแหน่ง</label><input id="s_position" value="ครู"/></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>วิทยฐานะ</label><input id="s_academic" value="ชำนาญการ"/></div>
+              <div class="field"><label>ปีงบประมาณ</label><input id="s_year" placeholder="เช่น 2568"/></div>
+            </div>
+            <div class="field"><label>ชื่อสถานศึกษา</label><input id="s_school" value="โรงเรียนกระดุมทองวิทยา"/></div>
+            <div class="field">
+              <label>ข้อความต้อนรับ (แสดงใน Hero + แถบเลื่อนขวา)</label>
+              <input id="s_welcomeText" placeholder="ยินดีต้อนรับคณะกรรมการผู้ประเมิน" value="ยินดีต้อนรับคณะกรรมการผู้ประเมิน"/>
             </div>
           </div>
-          <div class="field"><label>โลโก้ (รูปภาพสถานศึกษา)</label>
-            <div class="field-with-btn">
-              <input id="s_logoUrl" placeholder="https://... หรือกดอัปโหลด"/>
-              <button type="button" class="btn btn-ghost btn-sm" onclick="pickCropTo(u=>{$('s_logoUrl').value=u;},'1/1')">📤 อัปโหลด/ครอป</button>
+
+          <div class="settings-group">
+            <div class="section-head-label">🖼 รูปภาพ &amp; โลโก้</div>
+            <div class="field"><label>ภาพผู้ประเมิน / รูปบุคคล (แสดงเด่นใน Hero)</label>
+              <div class="field-with-btn">
+                <input id="s_portraitUrl" placeholder="https://... หรือกดอัปโหลด"/>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="pickCropTo(u=>{$('s_portraitUrl').value=u;},'1/1')">📤 อัปโหลด/ครอป</button>
+              </div>
+            </div>
+            <div class="field"><label>โลโก้ (รูปภาพสถานศึกษา)</label>
+              <div class="field-with-btn">
+                <input id="s_logoUrl" placeholder="https://... หรือกดอัปโหลด"/>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="pickCropTo(u=>{$('s_logoUrl').value=u;},'1/1')">📤 อัปโหลด/ครอป</button>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>ภาพ Hero พื้นหลัง URL</label><input id="s_heroUrl" placeholder="https://..."/></div>
+              <div class="field"><label>Favicon URL</label><input id="s_faviconUrl" placeholder="https://..."/></div>
             </div>
           </div>
-          <div class="field"><label>ภาพ Hero พื้นหลัง URL</label><input id="s_heroUrl" placeholder="https://..."/></div>
-          <div class="field"><label>Favicon URL</label><input id="s_faviconUrl" placeholder="https://..."/></div>
-          <div class="field"><label>รหัส PIN ผู้ดูแล (4 หลัก)</label><input id="s_pin" maxlength="4" type="text" placeholder="0000"/></div>
-          <div class="divider"></div>
-          <div class="section-head-label">🔒 ความปลอดภัย — โหมดปิดกั้นการเข้าถึง</div>
-          <label class="block-toggle" for="s_blockLinks">
-            <input type="checkbox" id="s_blockLinks"/>
-            <span class="block-toggle-track"><span class="block-toggle-thumb"></span></span>
-            <span class="block-toggle-label">
-              <b>เปิดโหมดปิดกั้นไม่ให้เข้าถึงลิงก์/เนื้อหาฝัง</b>
-              <small>เมื่อเปิด ผู้เข้าชมจะคลิกเปิดลิงก์ระบบ/ลิงก์ฝัง/วิดีโอ/เอกสารฝังไม่ได้ และจะเด้งข้อความแจ้งเตือนแทน — ใช้ป้องกันความปลอดภัยของระบบที่ฝังไว้ แล้วค่อยปิดโหมดนี้เฉพาะช่วงกรรมการประเมิน (ผู้ดูแลที่ปลดล็อกแล้วยังเปิดได้ตามปกติ)</small>
-            </span>
-          </label>
-          <div class="section-head-label">🧭 Product Tour — นำชมการใช้งานเว็บไซต์</div>
-          <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:10px;line-height:1.7">
-            ระบบแนะนำผู้ใช้งานครั้งแรก (Onboarding) ด้วยกล่องคำอธิบายชี้จุดสำคัญบนหน้าจอเป็นลำดับขั้นตอน
-            ผู้เข้าชมกดปุ่ม 🧭 บน navbar เพื่อเริ่มทัวร์ได้เองทุกเมื่อ ไม่ว่าตั้งโหมดใดไว้
-          </p>
-          <div class="field">
-            <label>โหมดการแสดงทัวร์อัตโนมัติ</label>
-            <select id="s_tourMode">
-              <option value="off">🚫 ปิดใช้งาน — ไม่ขึ้นอัตโนมัติ (กดปุ่ม 🧭 เพื่อดูได้เสมอ)</option>
-              <option value="auto">✅ เปิดใช้งาน — ขึ้นอัตโนมัติเฉพาะการเข้าชมครั้งแรก แล้วรีเซ็ตใหม่ทุก 3 เดือน</option>
-              <option value="test">🧪 เปิดระบบทดสอบ — ขึ้นอัตโนมัติทุกครั้งที่รีเฟรชหน้า (สำหรับทดสอบ/ปรับแต่งทัวร์)</option>
-            </select>
-            <div class="field-note">โหมด "เปิดใช้งาน" จดจำการเข้าชมต่อเครื่อง/เบราว์เซอร์ผ่าน localStorage</div>
+
+          <div class="settings-group">
+            <div class="section-head-label">🔑 รหัสผู้ดูแล</div>
+            <div class="field"><label>รหัส PIN ผู้ดูแล (4 หลัก)</label><input id="s_pin" maxlength="4" type="text" placeholder="0000" style="max-width:160px"/></div>
           </div>
-          <div class="divider"></div>
-          <div class="section-head-label">🔤 ฟอนต์แสดงผล (อัปโหลดฟอนต์เอง)</div>
-          <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:12px;line-height:1.7">
-            อัปโหลดไฟล์ฟอนต์เพื่อเปลี่ยนตัวอักษร <strong>หัวเรื่อง</strong> และ <strong>เนื้อหา</strong> ของทั้งเว็บไซต์
-            รองรับ <strong>.woff2 / .woff / .ttf / .otf</strong> — แนะนำ <strong>.woff2</strong> เพราะไฟล์เล็กที่สุด (ไม่ควรเกิน ~700KB ต่อไฟล์)
-          </p>
-          <div class="field">
-            <label>ฟอนต์หัวเรื่อง (Heading)</label>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-              <label class="btn btn-ghost btn-sm" style="cursor:pointer">📤 เลือกไฟล์ฟอนต์
-                <input type="file" id="fontHeadInput" accept=".woff2,.woff,.ttf,.otf,font/*" hidden onchange="handleFontUpload(event,'head')"/>
-              </label>
-              <span id="fontHeadName" style="font-size:.85rem;color:var(--text-2)">— ใช้ค่าเริ่มต้น (Kanit)</span>
-              <button type="button" class="btn btn-xs btn-del-media" id="fontHeadReset" style="display:none" onclick="resetCustomFont('head')">↺ คืนค่าเริ่มต้น</button>
+
+          <button class="btn btn-primary js-save-settings">💾 บันทึกการตั้งค่า</button>
+        </div>
+
+        <!-- Pane: คณะกรรมการ -->
+        <div class="modal-pane" data-pane="committee">
+          <div class="settings-group">
+            <div class="section-head-label">👥 คณะกรรมการผู้ประเมิน (แสดงใต้ Hero — 3 คน)</div>
+            <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:12px;line-height:1.7">
+              กรอกข้อความต้อนรับและรายชื่อกรรมการทั้ง 3 ท่าน เพื่อแสดงในส่วนต้อนรับใต้ Hero ของหน้าเว็บ
+            </p>
+            <div class="field"><label>ข้อความต้อนรับคณะกรรมการ (Fade-in)</label><input id="s_committeeWelcome" placeholder="ยินดีต้อนรับคณะกรรมการ"/></div>
+            <div class="field"><label>คำบรรยายใต้หัวข้อ</label><input id="s_committeeSub" placeholder="คณะกรรมการประเมินเพื่อคงวิทยฐานะ"/></div>
+            <div id="committeeEditor" style="margin-top:6px"></div>
+          </div>
+          <button class="btn btn-primary js-save-settings">💾 บันทึกการตั้งค่า</button>
+        </div>
+
+        <!-- Pane: รูปลักษณ์ & ทัวร์ (ฟอนต์ + ทัวร์ + ความปลอดภัย) -->
+        <div class="modal-pane" data-pane="appearance">
+          <div class="settings-group">
+            <div class="section-head-label">🔒 ความปลอดภัย — โหมดปิดกั้นการเข้าถึง</div>
+            <label class="block-toggle" for="s_blockLinks">
+              <input type="checkbox" id="s_blockLinks"/>
+              <span class="block-toggle-track"><span class="block-toggle-thumb"></span></span>
+              <span class="block-toggle-label">
+                <b>เปิดโหมดปิดกั้นไม่ให้เข้าถึงลิงก์/เนื้อหาฝัง</b>
+                <small>เมื่อเปิด ผู้เข้าชมจะคลิกเปิดลิงก์ระบบ/ลิงก์ฝัง/วิดีโอ/เอกสารฝังไม่ได้ และจะเด้งข้อความแจ้งเตือนแทน — ใช้ป้องกันความปลอดภัยของระบบที่ฝังไว้ แล้วค่อยปิดโหมดนี้เฉพาะช่วงกรรมการประเมิน (ผู้ดูแลที่ปลดล็อกแล้วยังเปิดได้ตามปกติ)</small>
+              </span>
+            </label>
+          </div>
+
+          <div class="settings-group">
+            <div class="section-head-label">🧭 Product Tour — นำชมการใช้งานเว็บไซต์</div>
+            <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:10px;line-height:1.7">
+              ระบบแนะนำผู้ใช้งานครั้งแรก (Onboarding) ด้วยกล่องคำอธิบายชี้จุดสำคัญบนหน้าจอเป็นลำดับขั้นตอน
+              ผู้เข้าชมกดปุ่ม 🧭 บน navbar เพื่อเริ่มทัวร์ได้เองทุกเมื่อ ไม่ว่าตั้งโหมดใดไว้
+            </p>
+            <div class="field">
+              <label>โหมดการแสดงทัวร์อัตโนมัติ</label>
+              <select id="s_tourMode">
+                <option value="off">🚫 ปิดใช้งาน — ไม่ขึ้นอัตโนมัติ (กดปุ่ม 🧭 เพื่อดูได้เสมอ)</option>
+                <option value="auto">✅ เปิดใช้งาน — ขึ้นอัตโนมัติเฉพาะการเข้าชมครั้งแรก แล้วรีเซ็ตใหม่ทุก 3 เดือน</option>
+                <option value="test">🧪 เปิดระบบทดสอบ — ขึ้นอัตโนมัติทุกครั้งที่รีเฟรชหน้า (สำหรับทดสอบ/ปรับแต่งทัวร์)</option>
+              </select>
+              <div class="field-note">โหมด "เปิดใช้งาน" จดจำการเข้าชมต่อเครื่อง/เบราว์เซอร์ผ่าน localStorage</div>
             </div>
-            <div style="font-family:var(--font-head);font-size:1.3rem;font-weight:800;margin-top:8px;color:var(--text)">ก ข ค Abc 123 — ตัวอย่างหัวเรื่อง</div>
           </div>
-          <div class="field">
-            <label>ฟอนต์เนื้อหา (Body)</label>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-              <label class="btn btn-ghost btn-sm" style="cursor:pointer">📤 เลือกไฟล์ฟอนต์
-                <input type="file" id="fontBodyInput" accept=".woff2,.woff,.ttf,.otf,font/*" hidden onchange="handleFontUpload(event,'body')"/>
-              </label>
-              <span id="fontBodyName" style="font-size:.85rem;color:var(--text-2)">— ใช้ค่าเริ่มต้น (Sarabun)</span>
-              <button type="button" class="btn btn-xs btn-del-media" id="fontBodyReset" style="display:none" onclick="resetCustomFont('body')">↺ คืนค่าเริ่มต้น</button>
+
+          <div class="settings-group">
+            <div class="section-head-label">🔤 ฟอนต์แสดงผล (อัปโหลดฟอนต์เอง)</div>
+            <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:12px;line-height:1.7">
+              อัปโหลดไฟล์ฟอนต์เพื่อเปลี่ยนตัวอักษร <strong>หัวเรื่อง</strong> และ <strong>เนื้อหา</strong> ของทั้งเว็บไซต์
+              รองรับ <strong>.woff2 / .woff / .ttf / .otf</strong> — แนะนำ <strong>.woff2</strong> เพราะไฟล์เล็กที่สุด (ไม่ควรเกิน ~700KB ต่อไฟล์)
+            </p>
+            <div class="field">
+              <label>ฟอนต์หัวเรื่อง (Heading)</label>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <label class="btn btn-ghost btn-sm" style="cursor:pointer">📤 เลือกไฟล์ฟอนต์
+                  <input type="file" id="fontHeadInput" accept=".woff2,.woff,.ttf,.otf,font/*" hidden onchange="handleFontUpload(event,'head')"/>
+                </label>
+                <span id="fontHeadName" style="font-size:.85rem;color:var(--text-2)">— ใช้ค่าเริ่มต้น (Kanit)</span>
+                <button type="button" class="btn btn-xs btn-del-media" id="fontHeadReset" style="display:none" onclick="resetCustomFont('head')">↺ คืนค่าเริ่มต้น</button>
+              </div>
+              <div style="font-family:var(--font-head);font-size:1.3rem;font-weight:800;margin-top:8px;color:var(--text)">ก ข ค Abc 123 — ตัวอย่างหัวเรื่อง</div>
             </div>
-            <div style="font-family:var(--font-body);font-size:1rem;margin-top:8px;color:var(--text-2)">ก ข ค Abc 123 — ตัวอย่างเนื้อหา ทดสอบการอ่านข้อความยาว ๆ</div>
+            <div class="field">
+              <label>ฟอนต์เนื้อหา (Body)</label>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <label class="btn btn-ghost btn-sm" style="cursor:pointer">📤 เลือกไฟล์ฟอนต์
+                  <input type="file" id="fontBodyInput" accept=".woff2,.woff,.ttf,.otf,font/*" hidden onchange="handleFontUpload(event,'body')"/>
+                </label>
+                <span id="fontBodyName" style="font-size:.85rem;color:var(--text-2)">— ใช้ค่าเริ่มต้น (Sarabun)</span>
+                <button type="button" class="btn btn-xs btn-del-media" id="fontBodyReset" style="display:none" onclick="resetCustomFont('body')">↺ คืนค่าเริ่มต้น</button>
+              </div>
+              <div style="font-family:var(--font-body);font-size:1rem;margin-top:8px;color:var(--text-2)">ก ข ค Abc 123 — ตัวอย่างเนื้อหา ทดสอบการอ่านข้อความยาว ๆ</div>
+            </div>
           </div>
-          <div class="section-head-label">👥 คณะกรรมการผู้ประเมิน (แสดงใต้ Hero — 3 คน)</div>
-          <div class="field"><label>ข้อความต้อนรับคณะกรรมการ (Fade-in)</label><input id="s_committeeWelcome" placeholder="ยินดีต้อนรับคณะกรรมการ"/></div>
-          <div class="field"><label>คำบรรยายใต้หัวข้อ</label><input id="s_committeeSub" placeholder="คณะกรรมการประเมินเพื่อคงวิทยฐานะ"/></div>
-          <div id="committeeEditor" style="margin-top:6px"></div>
-          <div class="divider"></div>
-          <div class="section-head-label">☁️ การอัปโหลดไฟล์/รูปภาพ (Google Drive via Apps Script)</div>
-          <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:12px;line-height:1.7">
-            ไฟล์และรูปภาพจะถูกอัปโหลดขึ้น <strong>Google Drive</strong> ผ่าน Google Apps Script Web App<br>
-            ต้อง Deploy GAS เป็น Web App (Anyone can access) แล้วนำ URL มาวางด้านล่าง
-          </p>
-          <div class="field">
-            <label>GAS Web App URL (DRIVE_UPLOAD_ENDPOINT)</label>
-            <input id="s_gasEndpoint" placeholder="https://script.google.com/macros/s/AKfy.../exec"/>
-            <div class="field-note">URL ของ Google Apps Script ที่ Deploy เป็น Web App → Execute as: Me, Who has access: Anyone</div>
+          <button class="btn btn-primary js-save-settings">💾 บันทึกการตั้งค่า</button>
+        </div>
+
+        <!-- Pane: อัปโหลด & รายงาน (Drive/GAS + Export Report) -->
+        <div class="modal-pane" data-pane="connect">
+          <div class="settings-group">
+            <div class="section-head-label">☁️ การอัปโหลดไฟล์/รูปภาพ (Google Drive via Apps Script)</div>
+            <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:12px;line-height:1.7">
+              ไฟล์และรูปภาพจะถูกอัปโหลดขึ้น <strong>Google Drive</strong> ผ่าน Google Apps Script Web App<br>
+              ต้อง Deploy GAS เป็น Web App (Anyone can access) แล้วนำ URL มาวางด้านล่าง
+            </p>
+            <div class="field">
+              <label>GAS Web App URL (DRIVE_UPLOAD_ENDPOINT)</label>
+              <input id="s_gasEndpoint" placeholder="https://script.google.com/macros/s/AKfy.../exec"/>
+              <div class="field-note">URL ของ Google Apps Script ที่ Deploy เป็น Web App → Execute as: Me, Who has access: Anyone</div>
+            </div>
+            <div class="field">
+              <label>Google Drive Folder ID</label>
+              <input id="s_driveFolderId" placeholder="เช่น 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"/>
+              <div class="field-note">ID ของโฟลเดอร์ปลายทางใน Google Drive (จาก URL: drive.google.com/drive/folders/<strong>ID ตรงนี้</strong>)</div>
+            </div>
+            <button class="btn btn-primary js-save-settings">💾 บันทึกการตั้งค่า</button>
           </div>
-          <div class="field">
-            <label>Google Drive Folder ID</label>
-            <input id="s_driveFolderId" placeholder="เช่น 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"/>
-            <div class="field-note">ID ของโฟลเดอร์ปลายทางใน Google Drive (จาก URL: drive.google.com/drive/folders/<strong>ID ตรงนี้</strong>)</div>
+
+          <div class="settings-group">
+            <div class="section-head-label">📖 ส่งออกเป็นเล่มรายงาน</div>
+            <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:12px;line-height:1.7">
+              รวบรวมข้อมูลทุกส่วน (ประวัติ/ภาระงาน, ส่วนที่ 1–3) มาเรียบเรียงเป็นเอกสารรูปแบบวิชาการไทย
+              พร้อมหน้าปกและสารบัญหัวข้อ แล้วดาวน์โหลดเป็นไฟล์ <strong>.docx</strong> (เปิด/แก้ไขต่อใน Word ได้)
+            </p>
+            <button class="btn btn-primary" id="exportReportBtn" style="background:linear-gradient(135deg,#1a1008,#5a4020)">📖 ส่งออกเป็นเล่มรายงาน (.docx)</button>
           </div>
-          <button class="btn btn-primary" id="saveSettingsBtn">💾 บันทึกการตั้งค่า</button>
-          <div class="divider"></div>
-          <div class="section-head-label">📖 ส่งออกเป็นเล่มรายงาน</div>
-          <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:12px;line-height:1.7">
-            รวบรวมข้อมูลทุกส่วน (ประวัติ/ภาระงาน, ส่วนที่ 1–3) มาเรียบเรียงเป็นเอกสารรูปแบบวิชาการไทย
-            พร้อมหน้าปกและสารบัญหัวข้อ แล้วดาวน์โหลดเป็นไฟล์ <strong>.docx</strong> (เปิด/แก้ไขต่อใน Word ได้)
-          </p>
-          <button class="btn btn-primary" id="exportReportBtn" style="background:linear-gradient(135deg,#1a1008,#5a4020)">📖 ส่งออกเป็นเล่มรายงาน (.docx)</button>
         </div>
 
         <!-- Pane: Indicators -->
@@ -2098,6 +2146,7 @@ a:has(.ic-img-linked){display:block}
     <div class="modal-tabs">
       <button class="modal-tab active" data-pane="hist-content">เนื้อหา</button>
       <button class="modal-tab" data-pane="hist-media">เพิ่มสื่อ</button>
+      <button class="modal-tab" data-pane="hist-pa1">📎 เอกสาร PA1</button>
     </div>
     <div class="modal-body">
       <div class="modal-pane active" data-pane="hist-content">
@@ -2130,6 +2179,26 @@ a:has(.ic-img-linked){display:block}
         </div>
         <div id="histMediaFormArea" style="margin-top:16px"></div>
         <div class="upload-progress" id="histUploadProgress">
+          <div class="spinner"></div>
+          <span>กำลังอัปโหลด...</span>
+        </div>
+      </div>
+      <div class="modal-pane" data-pane="hist-pa1">
+        <div class="section-head-label" style="margin-bottom:6px">📎 อัปโหลดเอกสาร PA1</div>
+        <p style="font-size:.82rem;color:var(--text-dim);margin-bottom:12px;line-height:1.7">
+          อัปโหลดไฟล์ข้อตกลงพัฒนางาน (PA1) เพื่อให้แสดงในแท็บ <strong>"📎 ดู PA1"</strong> ของส่วนประวัติและภาระงาน
+          แนะนำ <strong>📁 อัปโหลดไฟล์</strong> (PDF/รูป) หรือ <strong>📄 เอกสาร Drive</strong> สำหรับฝังเอกสารจาก Google Drive
+        </p>
+        <div class="add-media-row" style="margin-bottom:0">
+          <button class="btn-add-media" onclick="openMediaForm('file','pa1')">📁 อัปโหลดไฟล์ PA1</button>
+          <button class="btn-add-media" onclick="openMediaForm('drivedoc','pa1')">📄 เอกสาร Drive</button>
+          <button class="btn-add-media" onclick="openMediaForm('image','pa1')">🖼 ภาพเดียว</button>
+          <button class="btn-add-media" onclick="openMediaForm('linkcard','pa1')">🔗 Card ลิงก์</button>
+          <button class="btn-add-media" onclick="openMediaForm('textbox','pa1')">📝 กล่องข้อความ</button>
+          <button class="btn-add-media" onclick="openMediaForm('divider','pa1')">➖ เส้นแบ่ง</button>
+        </div>
+        <div id="pa1MediaFormArea" style="margin-top:16px"></div>
+        <div class="upload-progress" id="pa1UploadProgress">
           <div class="spinner"></div>
           <span>กำลังอัปโหลด...</span>
         </div>
@@ -2483,6 +2552,7 @@ const DEFAULT_HISTORY = {
 let historyData = { personal:DEFAULT_HISTORY.personal, body:DEFAULT_HISTORY.body, mediaItems:[] };
 let challengeData = { title:"", desc:"", mediaItems:[] };
 let clipsData = { title:"", desc:"", mediaItems:[] };
+let pa1Data = { mediaItems:[] };   // เอกสารอัปโหลด PA1 (อยู่ใน history/pa1)
 
 // บล็อกที่กำลังแก้ไขอยู่
 let currentEditBlockId = null;  // 'history' | 'challenge' | indicator-id
@@ -2498,6 +2568,7 @@ let cropperInst = null;
 function getMediaItemsFor(context, blockId){
   if(context==="indicator"){ const ind=allIndicators.find(i=>i.id===blockId); return ind?(ind.mediaItems||[]):[]; }
   if(context==="history")   return historyData.mediaItems||[];
+  if(context==="pa1")       return pa1Data.mediaItems||[];
   if(context==="challenge") return challengeData.mediaItems||[];
   if(context==="clips")     return clipsData.mediaItems||[];
   return [];
@@ -2570,6 +2641,9 @@ async function loadAllData(){
     // โหลด history
     const histSnap = await db.collection("history").doc("profile").get();
     if(histSnap.exists) historyData = {mediaItems:[], ...histSnap.data()};
+    // โหลดเอกสาร PA1
+    const pa1Snap = await db.collection("history").doc("pa1").get();
+    if(pa1Snap.exists) pa1Data = {mediaItems:[], ...pa1Snap.data()};
     // โหลด challenge
     const chalSnap = await db.collection("challenge").doc("main").get();
     if(chalSnap.exists) challengeData = {mediaItems:[], ...chalSnap.data()};
@@ -2985,6 +3059,13 @@ function renderHistory(){
   const paneP = personal ? readmore(formatRichText(personal),300,historyData.personalAlign) : `<div class="empty-state">ยังไม่มีข้อมูลส่วนตัว</div>`;
   const paneW = body     ? readmore(formatRichText(body),340,historyData.bodyAlign)     : `<div class="empty-state">ยังไม่มีข้อมูลภาระงาน</div>`;
 
+  // แท็บ PA1 — เอกสารอัปโหลด
+  const pa1Media = renderMediaItems(pa1Data.mediaItems||[], "pa1");
+  const pa1Edit  = isAdmin ? `<div style="margin-bottom:14px"><button class="btn btn-primary btn-sm" onclick="openHistoryEditor('pa1')">📤 อัปโหลด/จัดการเอกสาร PA1</button></div>` : "";
+  const panePA1  = `${pa1Edit}${pa1Media
+      ? `<div class="media-items-list">${pa1Media}</div>`
+      : `<div class="empty-state">ยังไม่มีเอกสาร PA1${isAdmin?"":" — กรุณาติดต่อผู้ดูแลระบบ"}</div>`}`;
+
   wrap.innerHTML = `
     <div class="history-content">
       ${editBtn}
@@ -2992,9 +3073,11 @@ function renderHistory(){
       <div class="hist-subtabs">
         <button class="hist-subtab active" data-htab="personal" onclick="switchHistTab('personal')">👤 ข้อมูลส่วนตัว</button>
         <button class="hist-subtab" data-htab="work" onclick="switchHistTab('work')">📋 ภาระงานที่ ก.จ. กำหนด</button>
+        <button class="hist-subtab" data-htab="pa1" onclick="switchHistTab('pa1')">📎 ดู PA1</button>
       </div>
       <div class="hist-subpane" data-htab="personal">${paneP}</div>
       <div class="hist-subpane" data-htab="work" hidden>${paneW}</div>
+      <div class="hist-subpane" data-htab="pa1" hidden>${panePA1}</div>
       ${mediaHtml ? `<div class="media-items-list" style="margin-top:24px">${mediaHtml}</div>` : ""}
     </div>`;
   initReadMore(wrap);
@@ -3382,6 +3465,7 @@ function renderMediaItems(items, context, blockId){
 function _getMediaCollection(context){
   if(context==="indicator") return null; // ใช้ blockId แยก
   if(context==="history")   return {ref:db.collection("history").doc("profile"), data:historyData, render:renderHistory};
+  if(context==="pa1")       return {ref:db.collection("history").doc("pa1"), data:pa1Data, render:renderHistory};
   if(context==="challenge") return {ref:db.collection("challenge").doc("main"), data:challengeData, render:renderChallenge};
   if(context==="clips")     return {ref:db.collection("clips").doc("main"), data:clipsData, render:renderClips};
   return null;
@@ -3499,6 +3583,9 @@ function editMediaItem(context, blockId, idx){
   } else if(context==="history"){
     openHistoryEditor();
     setTimeout(()=>{ const t=document.querySelector('#histEditorOverlay .modal-tab[data-pane="hist-media"]'); if(t) t.click(); showForm(); }, 80);
+  } else if(context==="pa1"){
+    openHistoryEditor('pa1');
+    setTimeout(()=>{ const t=document.querySelector('#histEditorOverlay .modal-tab[data-pane="hist-pa1"]'); if(t) t.click(); showForm(); }, 80);
   } else if(context==="challenge"){
     openChallengeEditor();
     setTimeout(()=>{ const t=document.querySelector('#challengeEditorOverlay .modal-tab[data-pane="challenge-media"]'); if(t) t.click(); showForm(); }, 80);
@@ -4104,8 +4191,8 @@ $("settingsTabs").addEventListener("click",e=>{
   if(pane==="indicators") renderAdminIndList();
 });
 
-// Save general settings
-$("saveSettingsBtn").onclick = async()=>{
+// Save general settings (มีปุ่มบันทึกในหลายแท็บ — ผูก handler เดียวกันทั้งหมด)
+const _saveSettingsHandler = async()=>{
   const data = {
     name: $("s_name").value.trim(),
     position: $("s_position").value.trim(),
@@ -4143,6 +4230,7 @@ $("saveSettingsBtn").onclick = async()=>{
     SW.ok("บันทึกแล้ว");
   }catch(e){ Swal.close(); SW.err("บันทึกไม่สำเร็จ",e.message); }
 };
+document.querySelectorAll(".js-save-settings").forEach(b=>b.onclick=_saveSettingsHandler);
 
 // ============================================================
 // 📖 ส่งออกเป็นเล่มรายงาน (.docx) — รูปแบบวิชาการไทย
@@ -4678,8 +4766,8 @@ function downloadTemplate(){
 // ============================================================
 // HISTORY EDITOR
 // ============================================================
-function openHistoryEditor(){
-  currentEditContext = "history";
+function openHistoryEditor(openPane){
+  currentEditContext = (openPane==='pa1') ? "pa1" : "history";
   $("hist_personal").value = historyData.personal!=null ? historyData.personal : DEFAULT_HISTORY.personal;
   $("hist_body").value     = historyData.body!=null     ? historyData.body     : DEFAULT_HISTORY.body;
   $("histPersonalAlign").innerHTML = alignPickerHtml("hist_personal", historyData.personalAlign);
@@ -4687,9 +4775,10 @@ function openHistoryEditor(){
   initAlignPicker("hist_personal", historyData.personalAlign);
   initAlignPicker("hist_body", historyData.bodyAlign);
   $("histEditorOverlay").classList.add("open");
-  // reset pane
-  document.querySelectorAll("#histEditorOverlay .modal-tab").forEach((t,i)=>t.classList.toggle("active",i===0));
-  document.querySelectorAll("#histEditorOverlay .modal-pane").forEach((p,i)=>p.classList.toggle("active",i===0));
+  // เลือกแท็บที่จะเปิด: ค่าเริ่มต้น = แท็บแรก (เนื้อหา) · 'pa1' = แท็บเอกสาร PA1
+  const targetPane = (openPane==='pa1') ? 'hist-pa1' : 'hist-content';
+  document.querySelectorAll("#histEditorOverlay .modal-tab").forEach(t=>t.classList.toggle("active", t.dataset.pane===targetPane));
+  document.querySelectorAll("#histEditorOverlay .modal-pane").forEach(p=>p.classList.toggle("active", p.dataset.pane===targetPane));
 }
 $("histEditorClose").onclick = ()=>{$("histEditorOverlay").classList.remove("open");currentEditMediaIdx=null;};
 $("saveHistoryBtn").onclick = async()=>{
@@ -4843,7 +4932,7 @@ function openMediaForm(type, ctx, existing){
   const editBanner = existing
     ? `<div style="background:var(--accent-soft);border:1px solid var(--line-2);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:.85rem;font-weight:600;color:var(--accent)">✏️ กำลังแก้ไขเนื้อหาเดิม — แก้แล้วกดปุ่มบันทึกเพื่ออัปเดต</div>`
     : "";
-  const areaId = context==="history"?"histMediaFormArea":context==="challenge"?"challengeMediaFormArea":context==="clips"?"clipsMediaFormArea":"mediaFormArea";
+  const areaId = context==="history"?"histMediaFormArea":context==="pa1"?"pa1MediaFormArea":context==="challenge"?"challengeMediaFormArea":context==="clips"?"clipsMediaFormArea":"mediaFormArea";
   const area = $(areaId);
   if(!area) return;
 
@@ -5407,6 +5496,12 @@ async function saveMediaItem(type, context){
       await db.collection("history").doc("profile").update({mediaItems:items});
       historyData.mediaItems = items;
       renderHistory();
+    } else if(context==="pa1"){
+      if(editIdx!=null) oldItem = (pa1Data.mediaItems||[])[editIdx];
+      const items = buildItems(pa1Data.mediaItems);
+      await db.collection("history").doc("pa1").set({mediaItems:items},{merge:true});
+      pa1Data.mediaItems = items;
+      renderHistory();
     } else if(context==="challenge"){
       if(editIdx!=null) oldItem = (challengeData.mediaItems||[])[editIdx];
       const items = buildItems(challengeData.mediaItems);
@@ -5429,7 +5524,7 @@ async function saveMediaItem(type, context){
     Swal.close(); SW.ok(editIdx!=null?"อัปเดตสื่อแล้ว":"บันทึกสื่อแล้ว");
     currentEditMediaIdx = null;   // ออกจากโหมดแก้ไข
     // ล้าง form
-    const areaId = context==="history"?"histMediaFormArea":context==="challenge"?"challengeMediaFormArea":context==="clips"?"clipsMediaFormArea":"mediaFormArea";
+    const areaId = context==="history"?"histMediaFormArea":context==="pa1"?"pa1MediaFormArea":context==="challenge"?"challengeMediaFormArea":context==="clips"?"clipsMediaFormArea":"mediaFormArea";
     const area = $(areaId);
     if(area) area.innerHTML="";
     carouselUploadUrls=[];fileUploadList=[];
@@ -5467,6 +5562,11 @@ async function deleteMediaItem(context, blockId, idx){
       const items = (historyData.mediaItems||[]).filter((_,i)=>i!==idx);
       await db.collection("history").doc("profile").update({mediaItems:items});
       historyData.mediaItems = items;
+      renderHistory();
+    } else if(context==="pa1"){
+      const items = (pa1Data.mediaItems||[]).filter((_,i)=>i!==idx);
+      await db.collection("history").doc("pa1").set({mediaItems:items},{merge:true});
+      pa1Data.mediaItems = items;
       renderHistory();
     } else if(context==="challenge"){
       const items = (challengeData.mediaItems||[]).filter((_,i)=>i!==idx);
@@ -5536,6 +5636,7 @@ function uploadNamePrefix(){
   if(ctx==="challenge") return "ส่วนที่2 ประเด็นท้าทาย_";
   if(ctx==="clips")     return "ส่วนที่3 คลิปการสอน_";
   if(ctx==="history")   return "ประวัติและภาระงาน_";
+  if(ctx==="pa1")       return "PA1 เอกสาร_";
   return "";
 }
 async function uploadToDrive(fileOrBlob, onProgress, namePrefix){
@@ -5775,6 +5876,7 @@ async function exportData(){
     settings: siteSettings,
     indicators: allIndicators,
     history: historyData,
+    pa1: pa1Data,
     challenge: challengeData,
     clips: clipsData
   };
@@ -5799,6 +5901,7 @@ $("importJsonFile").addEventListener("change", async function(){
     if(data.settings) await db.collection("settings").doc("site").set(data.settings);
     // บันทึก history
     if(data.history) await db.collection("history").doc("profile").set(data.history);
+    if(data.pa1) await db.collection("history").doc("pa1").set(data.pa1);
     // บันทึก challenge
     if(data.challenge) await db.collection("challenge").doc("main").set(data.challenge);
     if(data.clips) await db.collection("clips").doc("main").set(data.clips);
