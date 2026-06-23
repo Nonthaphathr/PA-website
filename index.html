@@ -2344,6 +2344,7 @@ a:has(.ic-img-linked){display:block}
 // ============================================================
 // FIREBASE CONFIG — กำหนดค่าการเชื่อมต่อ Firebase
 // ============================================================
+/* ==PA-CONFIG:FIREBASE:START== (ส่วนนี้ถูกแทนที่อัตโนมัติโดย Config Generator — ห้ามลบบรรทัดมาร์กเกอร์) */
 const firebaseConfig = {
   apiKey: "AIzaSyDxtCv25zSPqHCbeGFeySE-_pqHz73uMRA",
   authDomain: "pa-website-1f3e1.firebaseapp.com",
@@ -2352,6 +2353,7 @@ const firebaseConfig = {
   messagingSenderId: "664588603714",
   appId: "1:664588603714:web:9c2f4ef33b90e2e030f8db"
 };
+/* ==PA-CONFIG:FIREBASE:END== */
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -4235,19 +4237,33 @@ document.querySelectorAll(".js-save-settings").forEach(b=>b.onclick=_saveSetting
 // ============================================================
 // 📖 ส่งออกเป็นเล่มรายงาน (.docx) — รูปแบบวิชาการไทย
 // ============================================================
-function _loadScript(src, globalName){
-  return new Promise((res,rej)=>{
-    if(window[globalName]) return res();
-    const sc = document.createElement("script");
-    sc.src = src;
-    sc.onload = ()=> window[globalName] ? res() : rej(new Error("โหลดไลบรารีไม่สมบูรณ์: "+globalName));
-    sc.onerror = ()=> rej(new Error("โหลดไลบรารีไม่สำเร็จ ("+globalName+") — ตรวจการเชื่อมต่ออินเทอร์เน็ต"));
-    document.head.appendChild(sc);
+function _loadScript(srcs, globalName){
+  const list = Array.isArray(srcs) ? srcs.slice() : [srcs];
+  return new Promise((resolve,reject)=>{
+    if(window[globalName]) return resolve();
+    const tryNext = ()=>{
+      if(!list.length) return reject(new Error("โหลดไลบรารีไม่สำเร็จ ("+globalName+") — ตรวจการเชื่อมต่ออินเทอร์เน็ต"));
+      const src = list.shift();
+      const sc = document.createElement("script");
+      sc.src = src;
+      sc.onload  = ()=> window[globalName] ? resolve() : tryNext();   // โหลดได้แต่ไม่เจอ global → ลอง CDN ถัดไป
+      sc.onerror = ()=> tryNext();                                    // โหลดไม่ได้ → ลอง CDN ถัดไป
+      document.head.appendChild(sc);
+    };
+    tryNext();
   });
 }
 async function ensureReportLibs(){
-  await _loadScript("https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js","docx");
-  await _loadScript("https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js","QRCode");
+  await _loadScript([
+    "https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js",
+    "https://unpkg.com/docx@8.5.0/build/index.umd.js"
+  ],"docx");
+  // qrcode-generator: ไฟล์เดียว ไม่มี dependency และ expose global `qrcode`
+  // (เปลี่ยนจาก qrcode@1.5.3 ที่ npm ถอดโฟลเดอร์ build/ ออกแล้ว ทำให้ลิงก์เดิม 404)
+  await _loadScript([
+    "https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js",
+    "https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"
+  ],"qrcode");
 }
 const DIM_NAMES = {
   1:"ด้านที่ 1 ด้านการจัดการเรียนรู้",
@@ -4284,10 +4300,13 @@ async function _fetchImageBytes(rawUrl){
   }
   return null;
 }
-// สร้าง QR code (PNG bytes) จากข้อความ/ลิงก์
+// สร้าง QR code (GIF bytes) จากข้อความ/ลิงก์ ด้วย qrcode-generator
 async function _qrBytes(text){
   try{
-    const dataUrl = await window.QRCode.toDataURL(String(text||""), {margin:1, width:300, errorCorrectionLevel:"M"});
+    const qr = window.qrcode(0, "M");        // type 0 = ปรับขนาดอัตโนมัติ, ECC ระดับ M
+    qr.addData(String(text||""));
+    qr.make();
+    const dataUrl = qr.createDataURL(8, 16);  // cellSize 8px, ขอบเงียบ 16px → data:image/gif
     const bin = atob(dataUrl.split(",")[1]);
     const arr = new Uint8Array(bin.length);
     for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
@@ -4317,7 +4336,7 @@ async function exportReportDocx(){
     };
     // ย่อหน้า QR + คำอธิบายลิงก์ใต้ภาพ
     const qrPara = (qr, label)=> new Paragraph({alignment:AlignmentType.CENTER, spacing:{before:40,after:100}, children:[
-      new ImageRun({data:qr, type:"png", transformation:{width:120,height:120}}),
+      new ImageRun({data:qr, type:"gif", transformation:{width:120,height:120}}),
       new TextRun({break:1, text:"สแกนเพื่อเปิด: "+label, font:FONT, size:24, color:"555555"})
     ]});
     const linkLine = (label)=> new Paragraph({children:[run(label,{italics:true,size:28,color:"777777"})], bullet:{level:0}, spacing:{after:30}});
@@ -5985,5 +6004,294 @@ document.querySelectorAll(".reveal").forEach(el=>revealObs.observe(el));
 initWelcomeAnimation(siteSettings.welcomeText);
 loadAllData();
 </script>
+
+<!-- ============================================================
+     ภาคผนวกท้ายโค้ด · PA APPENDIX (สำหรับเครื่องมือ Config Generator)
+     ------------------------------------------------------------
+     บล็อกด้านล่างเป็น "ข้อมูลแนบ" ที่ไม่ถูกประมวลผลโดยหน้าเว็บ
+     (ใช้แท็ก script ชนิด text/plain จึง inert) มีไว้ให้เครื่องมือ
+     อ่าน/คัดแยกได้ง่ายด้วยมาร์กเกอร์มาตรฐาน — รายละเอียดเต็มอยู่ใน
+     manifest (element id = pa-appendix-manifest) สรุปย่อ:
+
+       1) จุดแทนที่ Firebase config: โทเค็น FIREBASE:START / FIREBASE:END
+          (ห่อด้วยคอมเมนต์ JS อยู่ในส่วนสคริปต์หลักด้านบนของไฟล์)
+       2) โค้ด GAS (ดึงไปติดตั้งใน Apps Script): element id = pa-appendix-gas
+          (โทเค็น GAS:START / GAS:END)
+       3) Rule เกณฑ์ตัวชี้วัด (อ้างอิง): element id = pa-appendix-rule
+       4) Manifest (อธิบายมาร์กเกอร์ทั้งหมดเป็น JSON): id = pa-appendix-manifest
+     ============================================================ -->
+<script type="application/json" data-pa-appendix="manifest" id="pa-appendix-manifest">
+{
+  "schema": "pa-website-appendix/1.0",
+  "purpose": "ให้เครื่องมือ Config Generator ตรวจจับ/คัดแยกส่วนต่าง ๆ ของไฟล์นี้ได้อัตโนมัติ",
+  "note": "โทเค็นด้านล่างเป็น 'ตัวใน' ของมาร์กเกอร์เท่านั้น (ไม่รวมตัวห่อ /*..*/ หรือ <!--..-->) เพื่อกันการ match ซ้ำกับ JSON นี้เอง",
+  "replace": {
+    "firebaseConfig": {
+      "start_token": "==PA-CONFIG:FIREBASE:START==",
+      "end_token": "==PA-CONFIG:FIREBASE:END==",
+      "wrapper": "js_block_comment",
+      "regex_suggested": "\\/\\* ==PA-CONFIG:FIREBASE:START== [^*]*\\*\\/[\\s\\S]*?\\/\\* ==PA-CONFIG:FIREBASE:END== \\*\\/",
+      "action": "แทนที่ทั้งบล็อกด้วย const firebaseConfig = { ... }; ของครูคนใหม่ (คงบรรทัดมาร์กเกอร์ไว้)",
+      "fields": [
+        "apiKey",
+        "authDomain",
+        "projectId",
+        "storageBucket",
+        "messagingSenderId",
+        "appId"
+      ]
+    }
+  },
+  "extract": {
+    "gas": {
+      "selector": "#pa-appendix-gas",
+      "start_token": "==PA-APPENDIX:GAS:START==",
+      "end_token": "==PA-APPENDIX:GAS:END==",
+      "filename": "Code.gs",
+      "install": "วางใน Apps Script (script.google.com) → Deploy → Web App (Execute as: Me, Who has access: Anyone) → คัดลอก URL /exec ไปวางใน ตั้งค่า > อัปโหลด & รายงาน",
+      "config_inside": {
+        "name": "DEFAULT_FOLDER_ID",
+        "note": "แก้ Google Drive Folder ID ในโค้ด GAS ให้เป็นของครูคนใหม่ก่อน Deploy"
+      }
+    },
+    "rule": {
+      "selector": "#pa-appendix-rule",
+      "start_token": "==PA-APPENDIX:RULE:START==",
+      "end_token": "==PA-APPENDIX:RULE:END==",
+      "title": "รายละเอียดเกณฑ์การประเมินตามมาตรฐานตำแหน่ง (15 ตัวชี้วัด / 3 ด้าน)"
+    }
+  }
+}
+</script>
+
+<!-- ==PA-APPENDIX:GAS:START== -->
+<script type="text/plain" data-pa-appendix="gas" data-filename="Code.gs" id="pa-appendix-gas">
+/**
+ * ============================================================
+ *  Google Apps Script — Drive File Uploader
+ *  สำหรับใช้คู่กับเว็บไซต์ระบบประเมินเพื่อคงวิทยฐานะ
+ *
+ *  วิธีใช้ (no-cors + key + poll pattern):
+ *    1. เว็บ POST ไฟล์ base64 พร้อม key แบบ no-cors → GAS รับ, อัปไฟล์ขึ้น Drive,
+ *       เก็บลิงก์ไว้ใน CacheService โดยอ้างด้วย key
+ *    2. เว็บ GET ?key=... ซ้ำๆ → GAS ดึงลิงก์จาก cache คืนกลับ (JSON)
+ *
+ *  การ Deploy:
+ *    - เปิด Apps Script (script.google.com)
+ *    - วางโค้ดนี้ใน Code.gs
+ *    - Deploy → New deployment → Web App
+ *      - Execute as: Me (หรือ Service account)
+ *      - Who has access: Anyone
+ *    - คัดลอก URL (/exec) ไปใส่ใน Settings ของเว็บ
+ * ============================================================
+ */
+
+// ============================================================
+//  CONFIG — แก้ค่าตรงนี้ก่อน Deploy
+// ============================================================
+
+// Folder ID ของ Google Drive ที่ต้องการเก็บไฟล์
+// (จาก URL: drive.google.com/drive/folders/[FOLDER_ID_ตรงนี้])
+// ถ้าปล่อยว่าง จะใช้ My Drive root
+var DEFAULT_FOLDER_ID = "1fCqqqGaMmgrJsg5jk7Yq8cvvY4yxMNDK";
+
+// จำนวนวินาทีที่เก็บลิงก์ไว้ใน Cache (ต้องนานกว่า poll timeout ของเว็บ)
+var CACHE_EXPIRY_SEC = 120;
+
+// ============================================================
+//  doPost — รับไฟล์ base64 จากเว็บ แล้วอัปขึ้น Drive
+//  body (JSON):
+//    key       : string  — unique key สำหรับ poll
+//    filename  : string  — ชื่อไฟล์
+//    mimeType  : string  — MIME type เช่น image/jpeg
+//    data      : string  — base64 ของไฟล์
+//    folderId  : string  — (optional) override DEFAULT_FOLDER_ID
+// ============================================================
+function doPost(e) {
+  // --- CORS headers ให้ browser ยอมรับ response ---
+  var headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Content-Type": "application/json"
+  };
+
+  try {
+    // รับ JSON body (no-cors ส่งมาเป็น text/plain)
+    var raw = e.postData ? e.postData.contents : "";
+    if (!raw) {
+      return makeResponse({ error: "ไม่มีข้อมูล" }, headers);
+    }
+
+    var payload = JSON.parse(raw);
+    var key      = payload.key      || "";
+    var filename = payload.filename || ("upload_" + Date.now());
+    var mimeType = payload.mimeType || "application/octet-stream";
+    var b64data  = payload.data     || "";
+    var folderId = payload.folderId || DEFAULT_FOLDER_ID;
+
+    if (!key) {
+      return makeResponse({ error: "ไม่มี key" }, headers);
+    }
+    if (!b64data) {
+      return makeResponse({ error: "ไม่มีข้อมูลไฟล์" }, headers);
+    }
+
+    // แปลง base64 → Blob แล้วสร้างไฟล์ใน Drive
+    var decoded = Utilities.base64Decode(b64data);
+    var blob    = Utilities.newBlob(decoded, mimeType, filename);
+
+    // เลือก folder
+    var folder;
+    try {
+      folder = folderId
+        ? DriveApp.getFolderById(folderId)
+        : DriveApp.getRootFolder();
+    } catch (folderErr) {
+      // Folder ID ไม่ถูกต้อง → ใช้ root แทน
+      Logger.log("Folder error: " + folderErr + " → ใช้ root");
+      folder = DriveApp.getRootFolder();
+    }
+
+    // สร้างไฟล์
+    var file = folder.createFile(blob);
+
+    // ทำให้เข้าถึงได้โดยไม่ต้อง login (Anyone with link can view)
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+    // สร้าง public URL
+    var fileId  = file.getId();
+    var mimeLC  = mimeType.toLowerCase();
+    var publicUrl;
+
+    if (mimeLC.indexOf("image/") === 0) {
+      // รูปภาพ → ใช้ thumbnail URL ที่แสดงได้โดยตรง (<img src>)
+      publicUrl = "https://drive.google.com/thumbnail?id=" + fileId + "&sz=w1600";
+    } else {
+      // ไฟล์อื่น → ลิงก์ดาวน์โหลด/เปิด
+      publicUrl = "https://drive.google.com/file/d/" + fileId + "/view?usp=sharing";
+    }
+
+    // เก็บผลลัพธ์ไว้ใน CacheService เพื่อให้ poll GET ดึงได้
+    var cache = CacheService.getScriptCache();
+    cache.put("upload_" + key, JSON.stringify({ url: publicUrl, id: fileId }), CACHE_EXPIRY_SEC);
+
+    Logger.log("อัปโหลดสำเร็จ: " + filename + " → " + publicUrl);
+    return makeResponse({ ok: true, id: fileId, url: publicUrl }, headers);
+
+  } catch (err) {
+    Logger.log("doPost error: " + err);
+    // เก็บ error ไว้ใน cache ด้วย เพื่อให้เว็บรู้ว่าล้มเหลว
+    try {
+      var pl = JSON.parse(e.postData ? e.postData.contents : "{}");
+      if (pl.key) {
+        var c = CacheService.getScriptCache();
+        c.put("upload_" + pl.key, JSON.stringify({ error: err.toString() }), CACHE_EXPIRY_SEC);
+      }
+    } catch (_) {}
+    return makeResponse({ error: err.toString() }, headers);
+  }
+}
+
+// ============================================================
+//  doGet — poll ดึงผลลัพธ์ด้วย key
+//  query params:
+//    key : string — key ที่ส่งไปตอน POST
+//  returns JSON:
+//    { url, id }   — อัปโหลดสำเร็จ
+//    { pending: true } — ยังไม่เสร็จ (poll ต่อ)
+//    { error }     — อัปโหลดล้มเหลว
+// ============================================================
+function doGet(e) {
+  var headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Content-Type": "application/json"
+  };
+
+  try {
+    var key = e.parameter ? e.parameter.key : "";
+    if (!key) {
+      // ไม่มี key → ส่ง status กลับไป (ใช้ทดสอบว่า GAS ทำงานได้)
+      return makeResponse({
+        status: "ok",
+        message: "GAS Drive Uploader พร้อมใช้งาน",
+        timestamp: new Date().toISOString()
+      }, headers);
+    }
+
+    var cache = CacheService.getScriptCache();
+    var cached = cache.get("upload_" + key);
+
+    if (!cached) {
+      // ยังไม่มีผลลัพธ์ (อาจกำลัง process หรือ cache หมดอายุ)
+      return makeResponse({ pending: true }, headers);
+    }
+
+    // มีผลลัพธ์แล้ว → ลบ cache แล้วส่งกลับ
+    cache.remove("upload_" + key);
+    return makeResponse(JSON.parse(cached), headers);
+
+  } catch (err) {
+    Logger.log("doGet error: " + err);
+    return makeResponse({ error: err.toString() }, headers);
+  }
+}
+
+// ============================================================
+//  doOptions — สำหรับ CORS preflight (OPTIONS request)
+// ============================================================
+function doOptions(e) {
+  return ContentService
+    .createTextOutput("")
+    .setMimeType(ContentService.MimeType.TEXT)
+    .setHeader("Access-Control-Allow-Origin", "*")
+    .setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+    .setHeader("Access-Control-Allow-Headers", "Content-Type");
+}
+
+// ============================================================
+//  Helper — สร้าง JSON response พร้อม headers
+// ============================================================
+function makeResponse(obj, headers) {
+  var output = ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+
+  // ContentService ไม่รองรับ setHeader โดยตรงบน TextOutput
+  // แต่ header CORS จาก doPost/doGet ถูกส่งโดย Apps Script runtime อัตโนมัติ
+  // เมื่อ Deploy เป็น Web App ที่ Anyone can access
+  return output;
+}
+</script>
+<!-- ==PA-APPENDIX:GAS:END== -->
+
+<!-- ==PA-APPENDIX:RULE:START== -->
+<script type="text/plain" data-pa-appendix="rule" data-title="รายละเอียดเกณฑ์การประเมินตามมาตรฐานตำแหน่ง" id="pa-appendix-rule">
+รายละเอียดการประเมินการปฏิบัติงานตามมาตรฐานตำแหน่ง ซึ่งกำหนดไว้ 3 ด้าน (โดยเฉพาะสำหรับ ตำแหน่งครู) มีรายละเอียดตัวชี้วัดที่สำคัญดังนี้ครับ
+:
+1. ด้านการจัดการเรียนรู้ (8 ตัวชี้วัด)
+ เป็นการประเมินกระบวนการจัดการเรียนการสอนในห้องเรียนโดยตรง ประกอบด้วย:
+สร้างและพัฒนาหลักสูตร: จัดทำหรือพัฒนาหลักสูตรและหน่วยการเรียนรู้ให้สอดคล้องกับมาตรฐานการเรียนรู้ บริบทของสถานศึกษา และท้องถิ่น
+ออกแบบและจัดกิจกรรมการเรียนรู้: เน้นผู้เรียนเป็นสำคัญ เพื่อให้ผู้เรียนได้พัฒนาเต็มตามศักยภาพ มีกระบวนการคิด และค้นพบองค์ความรู้ด้วยตนเอง
+สร้างและพัฒนาสื่อ นวัตกรรม เทคโนโลยี: นำสื่อและแหล่งเรียนรู้มาใช้ให้สอดคล้องกับกิจกรรมการเรียนรู้ เพื่อส่งเสริมทักษะการคิดของผู้เรียน
+วัดและประเมินผลการเรียนรู้: ใช้วิธีการที่หลากหลาย ประเมินตามสภาพจริง และนำผลมาใช้แก้ปัญหาการจัดการเรียนรู้
+ศึกษา วิเคราะห์ และสังเคราะห์ (วิจัย): ใช้กระบวนการวิจัยเพื่อแก้ปัญหาหรือพัฒนาการเรียนรู้ที่ส่งผลต่อคุณภาพผู้เรียน
+จัดบรรยากาศที่ส่งเสริมการเรียนรู้: จัดสภาพแวดล้อมทั้งทางกายภาพ จิตวิทยา และสังคม ที่ปลอดภัย สร้างแรงบันดาลใจ และส่งเสริมทักษะชีวิต
+อบรมและพัฒนาคุณลักษณะที่ดี: บ่มเพาะให้ผู้เรียนมีคุณธรรม จริยธรรม คุณลักษณะอันพึงประสงค์ และค่านิยมที่ดีงาม
+2. ด้านการส่งเสริมและสนับสนุนการจัดการเรียนรู้ (4 ตัวชี้วัด)
+ เป็นการประเมินการทำงานที่ช่วยสนับสนุนการเรียนรู้และดูแลผู้เรียน นอกเหนือจากการสอนปกติ ประกอบด้วย:
+จัดทำข้อมูลสารสนเทศ: จัดทำและใช้ข้อมูลสารสนเทศของผู้เรียนและรายวิชาอย่างเป็นระบบ เพื่อเสริมสร้างและพัฒนาผู้เรียน
+ระบบดูแลช่วยเหลือผู้เรียน: ใช้ข้อมูลสารสนเทศรายบุคคล คัดกรองนักเรียน และประสานความร่วมมือเพื่อป้องกันและแก้ปัญหาให้ผู้เรียน
+ร่วมปฏิบัติงานทางวิชาการและงานอื่นๆ: มีส่วนร่วมในกิจกรรมของสถานศึกษาเพื่อยกระดับคุณภาพการจัดการศึกษา
+ประสานความร่วมมือ: ทำงานร่วมกับผู้ปกครอง ภาคีเครือข่าย และสถานประกอบการ เพื่อร่วมกันพัฒนาผู้เรียน
+3. ด้านการพัฒนาตนเองและวิชาชีพ (3 ตัวชี้วัด)
+ เป็นการประเมินการพัฒนาศักยภาพของครู ประกอบด้วย:
+พัฒนาตนเองอย่างเป็นระบบและต่อเนื่อง: พัฒนาความรู้ความสามารถ โดยเฉพาะการใช้ภาษาไทย ภาษาอังกฤษเพื่อการสื่อสาร และการใช้เทคโนโลยีดิจิทัลเพื่อการศึกษา รวมถึงสมรรถนะวิชาชีพครู
+มีส่วนร่วมในการแลกเปลี่ยนเรียนรู้ (PLC): แลกเปลี่ยนเรียนรู้ทางวิชาชีพกับเพื่อนครูและบุคลากรทางการศึกษาอย่างสม่ำเสมอ เพื่อนำผลไปแก้ปัญหาและพัฒนางาน
+นำความรู้มาใช้ในการพัฒนางาน: นำทักษะที่ได้จากการพัฒนาตนเองและวิชาชีพ มาปรับปรุงการจัดการเรียนรู้ การพัฒนาคุณภาพผู้เรียน และสร้างนวัตกรรมการศึกษา
+
+</script>
+<!-- ==PA-APPENDIX:RULE:END== -->
+
 </body>
 </html>
