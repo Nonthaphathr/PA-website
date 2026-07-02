@@ -1029,10 +1029,39 @@ a:has(.ic-img-linked){display:block}
 .syscard-cover-title{position:relative;z-index:1;color:#fff;font-family:var(--font-head);font-weight:800;font-size:1.22rem;text-align:center;text-shadow:0 2px 12px rgba(0,0,0,.85);line-height:1.35;word-break:break-word}
 .syscard-body{padding:1.1rem 1.2rem 1.25rem;flex:1 1 auto;display:flex;flex-direction:column}
 .syscard-cat{display:inline-block;align-self:flex-start;font-size:.72rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border:1px solid var(--line-2);border-radius:999px;padding:3px 12px;margin-bottom:9px;letter-spacing:.02em}
-.syscard-name{font-family:var(--font-head);font-weight:800;font-size:1.06rem;color:var(--text);margin-bottom:6px;line-height:1.35}
-.syscard-desc{font-size:.9rem;color:var(--text-2);line-height:1.7;margin-bottom:14px;white-space:pre-line}
+.syscard-name{font-family:var(--font-head);font-weight:800;font-size:1.06rem;color:var(--text);margin-bottom:6px;line-height:1.35;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+/* จำกัดคำอธิบายไว้ 3 บรรทัด กันการ์ดยืดยาวตามข้อความ — ถ้าล้นจะโชว์ปุ่ม "ดูเพิ่มเติม" แทน (ดูฟังก์ชัน initSysCards) */
+.syscard-desc{font-size:.9rem;color:var(--text-2);line-height:1.7;margin-bottom:4px;white-space:pre-line;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.syscard-more{display:none;align-self:flex-start;margin:0 0 12px;padding:0;
+  font-size:.82rem;font-weight:700;color:var(--accent);background:none;border:none;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer;transition:.2s}
+.syscard-more.show{display:inline-flex;align-items:center;gap:4px}
+.syscard-more:hover{color:var(--accent-2)}
 .syscard-link{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin-top:auto;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-weight:700;font-size:.9rem;padding:10px 18px;border-radius:11px;text-decoration:none;box-shadow:0 6px 18px var(--accent-glow);transition:.2s}
 .syscard-link:hover{transform:translateY(-2px);box-shadow:0 10px 24px var(--accent-glow)}
+
+/* ---- Syscard Mini Modal: แสดงรายละเอียดเต็มของ Card ลิงก์ระบบ (เปิดจากปุ่ม "ดูเพิ่มเติม") ---- */
+.sc-ov{position:fixed;inset:0;z-index:650;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;padding:20px}
+.sc-ov.open{display:flex}
+.sc-modal{width:100%;max-width:420px;max-height:88vh;overflow:auto;
+  background:var(--surface);border:1px solid var(--line-2);border-radius:20px;
+  box-shadow:0 40px 100px rgba(0,0,0,.35);animation:scModalIn .25s ease both}
+@keyframes scModalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.sc-modal-cover{position:relative;height:160px;background-size:cover;background-position:center;background-color:#16110d;
+  display:flex;align-items:center;justify-content:center;padding:1rem}
+.sc-modal-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.2),rgba(0,0,0,.7))}
+.sc-modal-cover-title{position:relative;z-index:1;color:#fff;font-family:var(--font-head);font-weight:800;font-size:1.1rem;text-align:center;text-shadow:0 2px 12px rgba(0,0,0,.85)}
+.sc-modal-close{position:absolute;top:12px;right:12px;z-index:2;width:34px;height:34px;border-radius:50%;
+  background:rgba(0,0,0,.4);color:#fff;font-size:1.05rem;display:grid;place-items:center;transition:.2s}
+.sc-modal-close:hover{background:#dc2626}
+.sc-modal-body{padding:20px 22px 22px;display:flex;flex-direction:column}
+.sc-modal-body .syscard-cat{margin-bottom:10px}
+.sc-modal-name{font-family:var(--font-head);font-weight:800;font-size:1.15rem;color:var(--text);line-height:1.4;margin-bottom:10px}
+.sc-modal-desc{font-size:.94rem;color:var(--text-2);line-height:1.85;white-space:pre-line;margin-bottom:20px}
+.sc-modal-body .syscard-link{align-self:stretch;justify-content:center;margin-top:0}
 
 /* ============================================================
    ✨ 3D Parallax Tilt / Boundary Glow — ลูกเล่นทั้งการ์ดระบบ
@@ -2364,6 +2393,22 @@ a:has(.ic-img-linked){display:block}
   <img id="lightboxImg" src="" alt=""/>
 </div>
 
+<!-- Syscard Mini Modal: รายละเอียดเต็มของ Card ลิงก์ระบบ (เปิดจากปุ่ม "ดูเพิ่มเติม" บนการ์ด) -->
+<div class="sc-ov" id="scOv" onclick="if(event.target===this) closeSysCardModal()">
+  <div class="sc-modal">
+    <div class="sc-modal-cover" id="scModalCover">
+      <button class="sc-modal-close" onclick="closeSysCardModal()">✕</button>
+      <div class="sc-modal-cover-title" id="scModalCoverTitle"></div>
+    </div>
+    <div class="sc-modal-body">
+      <span class="syscard-cat" id="scModalCat" style="display:none"></span>
+      <div class="sc-modal-name" id="scModalName"></div>
+      <div class="sc-modal-desc" id="scModalDesc"></div>
+      <a class="syscard-link" id="scModalLink" href="#" target="_blank" rel="noopener">เข้าใช้งานระบบ ↗</a>
+    </div>
+  </div>
+</div>
+
 <!-- 🧭 Product Tour: Overlay (backdrop+spotlight) + Popover (coach mark) -->
 <div id="tourOverlay">
   <div id="tourClickCatcher"></div>
@@ -3317,6 +3362,7 @@ function renderHistory(){
     </div>`;
   initReadMore(wrap);
   initAllCarousels();
+  initSysCards();
 }
 
 // สลับแท็บย่อยในส่วนประวัติ
@@ -3325,6 +3371,7 @@ function switchHistTab(tab){
   document.querySelectorAll(".hist-subpane").forEach(p=>{ p.hidden = (p.dataset.htab!==tab); });
   const pane = document.querySelector(`.hist-subpane[data-htab="${tab}"]`);
   if(pane) initReadMore(pane);   // วัดความสูงตอนแท็บถูกแสดงจริง
+  initSysCards();                // วัดล้น syscard-desc ตอนแท็บถูกแสดงจริงเช่นกัน
 }
 
 // ปุ่มอ่านเพิ่มเติม / ย่อเนื้อหา
@@ -3367,6 +3414,7 @@ function renderIndicators(){
     container.innerHTML = dimInds.map(ind=>renderIndicatorCard(ind)).join("");
   });
   initAllCarousels();
+  initSysCards();
 }
 
 function renderIndicatorCard(ind){
@@ -3404,7 +3452,8 @@ function toggleIndicator(id){
   const card = $(`ind-card-${id}`);
   if(!card) return;
   const nowOpen = card.classList.toggle("open");
-  if(nowOpen) openIndicators.add(id); else openIndicators.delete(id);
+  if(nowOpen){ openIndicators.add(id); initSysCards(); } // เพิ่งเปิด → วัดล้น syscard-desc ที่เพิ่งมองเห็น
+  else openIndicators.delete(id);
 }
 function toggleAllIndicators(open){
   document.querySelectorAll("#sec-part1 .indicator-card").forEach(card=>{
@@ -3412,6 +3461,7 @@ function toggleAllIndicators(open){
     const id = card.id.replace("ind-card-","");
     if(open) openIndicators.add(id); else openIndicators.delete(id);
   });
+  if(open) initSysCards();
 }
 
 // ========= CHALLENGE RENDER =========
@@ -3437,6 +3487,7 @@ function renderChallenge(){
       ${mediaHtml ? `<div class="media-items-list" style="margin-top:20px">${mediaHtml}</div>` : ""}
     </div>`;
   initAllCarousels();
+  initSysCards();
 }
 
 // ========= CLIPS (ส่วนที่ 3) RENDER =========
@@ -3463,6 +3514,7 @@ function renderClips(){
       ${mediaHtml ? `<div class="media-items-list" style="margin-top:20px">${mediaHtml}</div>` : ""}
     </div>`;
   initAllCarousels();
+  initSysCards();
 }
 
 // ============================================================
@@ -3621,7 +3673,8 @@ function renderMediaItems(items, context, blockId){
         <div class="syscard-body">
           ${item.category?`<span class="syscard-cat">${esc(item.category)}</span>`:""}
           ${item.title?`<div class="syscard-name">${esc(item.title)}</div>`:""}
-          ${item.description?`<div class="syscard-desc">${esc(item.description)}</div>`:""}
+          ${item.description?`<div class="syscard-desc">${esc(item.description)}</div>
+          <button type="button" class="syscard-more" onclick="openSysCardModal(this)">ดูเพิ่มเติม ▾</button>`:""}
           ${item.link?`<a class="syscard-link" href="${esc(item.link)}" target="_blank" rel="noopener">เข้าใช้งานระบบ ↗</a>`:""}
         </div>
       </div>`;
@@ -4173,6 +4226,48 @@ function openLightbox(url){
 }
 function closeLightbox(){$("lightbox").classList.remove("open")}
 document.addEventListener("keydown",e=>{if(e.key==="Escape") closeLightbox()});
+
+// ============================================================
+// SYSCARD — Card ลิงก์ระบบ: ปุ่ม "ดูเพิ่มเติม" + มินิโมดัลแสดงรายละเอียดเต็ม
+// ============================================================
+// ตรวจทุกใบว่าคำอธิบายยาวจนล้น 3 บรรทัด (ถูก line-clamp ตัด) ไหม → โชว์/ซ่อนปุ่ม "ดูเพิ่มเติม" ตามจริง
+// เรียกซ้ำได้เรื่อย ๆ อย่างปลอดภัย (หลัง re-render, เปิดแท็บ/accordion ที่เพิ่งถูกซ่อนอยู่ก่อนหน้า)
+function initSysCards(){
+  document.querySelectorAll(".syscard-desc").forEach(descEl=>{
+    const btn = descEl.nextElementSibling;
+    if(!btn || !btn.classList.contains("syscard-more")) return;
+    if(descEl.offsetParent===null) return; // ยังถูกซ่อนอยู่ (แท็บ/accordion ปิดอยู่) → วัดความสูงจริงไม่ได้ ข้ามไปก่อน
+    btn.classList.toggle("show", descEl.scrollHeight > descEl.clientHeight + 1);
+  });
+}
+// เปิดมินิโมดัลแสดงรายละเอียดเต็มของ Card ลิงก์ระบบ (อ่านข้อมูลจากการ์ดที่ถูกคลิกโดยตรง — ไม่ต้องเก็บ state ซ้ำ)
+function openSysCardModal(btn){
+  const card = btn.closest(".syscard");
+  if(!card) return;
+  const coverEl = card.querySelector(".syscard-cover");
+  const catEl   = card.querySelector(".syscard-cat");
+  const nameEl  = card.querySelector(".syscard-name");
+  const descEl  = card.querySelector(".syscard-desc");
+  const linkEl  = card.querySelector(".syscard-link");
+
+  $("scModalCover").style.backgroundImage = coverEl ? coverEl.style.backgroundImage : "";
+  $("scModalCoverTitle").textContent = coverEl ? (coverEl.querySelector(".syscard-cover-title")||{}).textContent||"" : "";
+  if(catEl){ $("scModalCat").textContent = catEl.textContent; $("scModalCat").style.display=""; }
+  else{ $("scModalCat").style.display="none"; }
+  $("scModalName").textContent = nameEl ? nameEl.textContent : "";
+  $("scModalDesc").textContent = descEl ? descEl.textContent : "";
+  const linkOut = $("scModalLink");
+  if(linkEl && linkEl.getAttribute("href")){ linkOut.href = linkEl.href; linkOut.style.display=""; }
+  else{ linkOut.style.display="none"; }
+
+  $("scOv").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeSysCardModal(){
+  $("scOv").classList.remove("open");
+  document.body.style.overflow = "";
+}
+document.addEventListener("keydown",e=>{if(e.key==="Escape") closeSysCardModal()});
 
 // ============================================================
 // SETTINGS MODAL
